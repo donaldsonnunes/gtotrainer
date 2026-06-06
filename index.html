@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTT GTO Quiz Trainer</title>
+    <title>MTT GTO Quiz Trainer - 9-Max Table</title>
     
-    <!-- CONEXÃO OBRIGATÓRIA PARA RECONHECER O INSTALADOR DO PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
     <meta name="mobile-web-app-capable" content="yes">
@@ -14,130 +13,160 @@
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #121824;
+            background-color: #0f172a;
             color: #ffffff;
             margin: 0;
-            padding: 15px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             overflow-x: hidden;
         }
 
-        h1 {
-            color: #4ade80;
-            margin-bottom: 5px;
-            font-size: 1.6rem;
-            text-align: center;
-        }
-
-        p.subtitle {
-            color: #94a3b8;
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-            text-align: center;
-        }
-
-        /* Layout Principal adaptável */
+        /* Layout em Duas Colunas */
         .app-layout {
             display: flex;
-            gap: 25px;
+            gap: 20px;
             max-width: 1100px;
             width: 100%;
             justify-content: center;
             align-items: flex-start;
-            position: relative;
         }
 
-        .trainer-container {
-            background-color: #1e293b;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        .main-game-container {
             flex: 1;
-            max-width: 550px;
-            box-sizing: border-box;
-            text-align: center;
-        }
-
-        /* PAINEL DA MATRIZ: Se adapta dinamicamente entre PC e Celular */
-        .matrix-panel {
-            background-color: #1e293b;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            display: none; 
+            max-width: 600px;
+            width: 100%;
+            display: flex;
             flex-direction: column;
             align-items: center;
+        }
+
+        /* AMBIENTAÇÃO DA MESA DE POKER OVAL */
+        .poker-table-area {
+            width: 100%;
+            height: 280px;
+            background-color: #0b1320;
+            border-radius: 140px;
+            border: 12px solid #334155;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 10px 25px rgba(0,0,0,0.5);
+            position: relative;
+            margin: 20px 0;
             box-sizing: border-box;
         }
 
-        .matrix-title {
-            font-size: 1.1rem;
-            color: #4ade80;
+        .felt-center {
+            position: absolute;
+            top: 15%;
+            left: 15%;
+            width: 70%;
+            height: 70%;
+            border: 2px dashed rgba(255,255,255,0.1);
+            border-radius: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .table-meta-info {
+            font-size: 0.85rem;
+            color: #94a3b8;
             font-weight: bold;
-            margin-bottom: 15px;
             text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
         }
 
-        .matrix {
-            display: grid;
-            grid-template-columns: repeat(13, 1fr);
-            gap: 2px;
-            width: min(90vw, 380px);
-            height: min(90vw, 380px);
+        /* ESTILIZAÇÃO DAS CARTAS DE POKER */
+        .cards-delivery {
+            display: flex;
+            gap: 8px;
         }
 
-        .cell {
-            background-color: #334155;
-            border-radius: 2px;
+        .poker-card {
+            width: 50px;
+            height: 72px;
+            background-color: #ffffff;
+            border-radius: 6px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 5px;
+            box-sizing: border-box;
+            font-weight: 900;
+            font-size: 1.2rem;
+            user-select: none;
+        }
+        
+        .card-red { color: #dc2626; }
+        .card-black { color: #1e293b; }
+        .card-suit-bottom { align-self: flex-end; font-size: 1rem; }
+
+        /* ASSENTOS DOS JOGADORES (POSICIONAMENTO GEOMÉTRICO) */
+        .player-seat {
+            position: absolute;
+            background-color: #1e293b;
+            border: 2px solid #475569;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-align: center;
+            width: 75px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+
+        /* Altera a cor do contorno para indicar que é a SUA vez de agir */
+        .hero-active-seat {
+            border-color: #4ade80 !important;
+            background-color: #064e3b !important;
+            box-shadow: 0 0 12px #4ade80;
+        }
+
+        .seat-status { color: #94a3b8; font-size: 0.65rem; margin-top: 2px; }
+        .hero-active-seat .seat-status { color: #4ade80; }
+
+        /* Coordenadas x/y para simular a mesa oval 9-Max */
+        .seat-0 { top: -5px; left: 43%; }      /* UTG */
+        .seat-1 { top: 30px; right: 10px; }    /* UTG+1 */
+        .seat-2 { top: 110px; right: -15px; }  /* MP */
+        .seat-3 { bottom: 30px; right: 10px; } /* HJ */
+        .seat-4 { bottom: -5px; left: 55%; }   /* CO */
+        .seat-5 { bottom: -5px; left: 30%; }   /* BTN */
+        .seat-6 { bottom: 30px; left: 10px; }  /* SB */
+        .seat-7 { top: 110px; left: -15px; }   /* BB */
+        .seat-8 { top: 30px; left: 10px; }     /* UTG+2 */
+
+        /* BOTÃO DO DEALER (D) */
+        .dealer-button {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background-color: #ffffff;
+            color: #000000;
+            border-radius: 50%;
+            font-size: 0.65rem;
+            font-weight: 900;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(0.55rem, 2.5vw, 0.65rem);
-            font-weight: bold;
-            color: #ffffff;
-            user-select: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            border: 1px solid #000;
         }
 
-        .cell-active-hand {
-            outline: 2px solid #fbbf24;
-            box-shadow: 0 0 10px #fbbf24;
-            z-index: 10;
-        }
-
-        .scenario-box {
-            background-color: #0f172a;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #334155;
-        }
-
-        .scenario-title {
-            font-size: 1rem;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .scenario-details {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #ffffff;
-            margin: 10px 0;
-        }
-
-        .hand-display {
-            font-size: 2.3rem;
-            font-weight: 800;
-            color: #fbbf24;
+        /* CONTROLES E PLACAR */
+        .action-block {
             background-color: #1e293b;
-            display: inline-block;
-            padding: 5px 20px;
-            border-radius: 6px;
-            margin-top: 5px;
+            padding: 15px;
+            border-radius: 12px;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
 
         .action-buttons {
@@ -145,23 +174,21 @@
             gap: 10px;
             justify-content: center;
             margin-bottom: 15px;
-            height: 50px;
+            height: 46px;
             align-items: center;
         }
 
         .btn {
-            padding: 12px 20px;
+            padding: 12px;
             font-size: 1rem;
             font-weight: bold;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            transition: all 0.2s;
             color: white;
             flex: 1;
-            max-width: 120px;
+            max-width: 110px;
         }
-
         .btn-raise { background-color: #f97316; }
         .btn-allin { background-color: #b91c1c; }
         .btn-limp { background-color: #3b82f6; }
@@ -170,31 +197,14 @@
         .btn-utility {
             background-color: #0284c7;
             color: white;
-            padding: 12px 20px;
+            padding: 12px;
             font-size: 1rem;
             border: none;
             border-radius: 6px;
             cursor: pointer;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             font-weight: bold;
             width: 100%;
-            max-width: 300px;
-        }
-
-        /* Botão para fechar a matriz no Celular */
-        .btn-close-matrix {
-            display: none;
-            background-color: #ef4444;
-            color: white;
-            padding: 12px 20px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 15px;
-            font-weight: bold;
-            width: 100%;
-            max-width: 380px;
         }
 
         .scoreboard {
@@ -205,118 +215,177 @@
             border-radius: 8px;
             font-size: 0.9rem;
         }
-
         .score-highlight { color: #4ade80; font-weight: bold; }
 
         .feedback-box {
             padding: 12px;
             border-radius: 6px;
-            margin-bottom: 15px;
+            margin-top: 15px;
             font-weight: bold;
             display: none;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             line-height: 1.4;
+            text-align: left;
+        }
+        .feedback-correct { background-color: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid #4ade80; }
+        .feedback-wrong { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
+
+        /* PAINEL LATERAL DE RANGES */
+        .matrix-panel {
+            background-color: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
         }
 
-        .feedback-correct { background-color: rgba(74, 222, 128, 0.2); color: #4ade80; border: 1px solid #4ade80; }
-        .feedback-wrong { background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+        .matrix-title { font-size: 1rem; color: #4ade80; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; }
+        
+        .matrix {
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            gap: 2px;
+            width: min(90vw, 360px);
+            height: min(90vw, 360px);
+        }
 
-        /* REGRAS EXCLUSIVAS PARA CELULAR (EFEITO SLIDE LATERAL) */
+        .cell {
+            background-color: #334155;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(0.55rem, 2.2vw, 0.65rem);
+            font-weight: bold;
+            color: #ffffff;
+            user-select: none;
+        }
+        .cell-active-hand { outline: 2px solid #fbbf24; box-shadow: 0 0 10px #fbbf24; z-index: 10; }
+
+        .btn-close-matrix {
+            display: none;
+            background-color: #ef4444;
+            color: white;
+            padding: 12px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        /* INTERFACE ADAPTÁVEL MOBILE (SLIDE OUT) */
         @media (max-width: 768px) {
-            .app-layout {
-                flex-direction: column;
-                align-items: center;
-            }
-
+            .app-layout { flex-direction: column; align-items: center; }
             .matrix-panel {
                 position: fixed;
                 top: 0;
-                right: -100%; /* Joga completamente para fora da tela na direita */
+                right: -100%;
                 width: 100vw;
                 height: 100vh;
                 z-index: 999;
                 border-radius: 0;
                 justify-content: center;
-                transition: right 0.3s ease-in-out; /* Faz o efeito de deslizar suave */
+                transition: right 0.25s ease-in-out;
             }
-
-            /* Quando ativo, desliza para dentro da tela ocupando tudo */
-            .matrix-panel.active {
-                display: flex !important;
-                right: 0;
-            }
-
-            .btn-close-matrix {
-                display: block; /* Só aparece no celular */
-            }
+            .matrix-panel.active { display: flex !important; right: 0; }
+            .btn-close-matrix { display: block; }
         }
 
-        /* Se for computador, mantém o comportamento lado a lado padrão */
         @media (min-width: 769px) {
-            .matrix-panel.active {
-                display: flex !important;
-            }
+            .matrix-panel.active { display: flex !important; }
         }
+
+        .summary-container { text-align: center; padding: 30px; background-color: #1e293b; border-radius: 12px; display: none; max-width: 500px; }
     </style>
 </head>
 <body>
 
     <h1>MTT GTO Quiz Trainer</h1>
-    <p class="subtitle">Laboratório de Ranges Mobile-Ready</p>
+    <p class="subtitle">Mesa 9-Max Simulada de Torneio</p>
 
     <div class="app-layout">
         
-        <!-- PAINEL DA MESA/TREINO -->
-        <div class="trainer-container" id="gameContainer">
-            <div class="feedback-box" id="feedbackBox">Feedback aqui</div>
-
-            <div class="scenario-box">
-                <div class="scenario-title" id="scenarioMeta">Carregando...</div>
-                <div class="scenario-details">
-                    Sua Mão: <br>
-                    <div class="hand-display" id="currentHandDisplay">--</div>
+        <!-- COLUNA CENTRAL: O JOGO E A MESA -->
+        <div class="main-game-container" id="gameArea">
+            
+            <!-- A MESA DE POKER -->
+            <div class="poker-table-area">
+                
+                <!-- Centro do Feltro -->
+                <div class="felt-center">
+                    <div class="table-meta-info" id="tableStackMeta">--</div>
+                    <!-- Cartas Visuais do Hero -->
+                    <div class="cards-delivery" id="visualCardsContainer">
+                        <div class="poker-card card-black"><div>A</div><div class="card-suit-bottom">♠</div></div>
+                        <div class="poker-card card-red"><div>K</div><div class="card-suit-bottom">♦</div></div>
+                    </div>
                 </div>
+
+                <!-- Assentos dos Jogadores Configurados Dinamicamente -->
+                <div id="seat-UTG" class="player-seat seat-0">UTG<div class="seat-status">Folded</div></div>
+                <div id="seat-UTG1" class="player-seat seat-1">UTG+1<div class="seat-status">Folded</div></div>
+                <div id="seat-MP" class="player-seat seat-2">MP<div class="seat-status">Folded</div></div>
+                <div id="seat-HJ" class="player-seat seat-3">HJ<div class="seat-status">Folded</div></div>
+                <div id="seat-CO" class="player-seat seat-4">CO<div class="seat-status">Folded</div></div>
+                <div id="seat-BTN" class="player-seat seat-5">BTN<div class="seat-status">Folded</div></div>
+                <div id="seat-SB" class="player-seat seat-6">SB<div class="seat-status">Folded</div></div>
+                <div id="seat-BB" class="player-seat seat-7">BB<div class="seat-status">Folded</div></div>
+                <div id="seat-UTG2" class="player-seat seat-8">UTG+2<div class="seat-status">Folded</div></div>
+
+                <!-- Botão de Dealer Móvel -->
+                <div id="dealerButtonToken" class="dealer-button">D</div>
             </div>
 
-            <div class="action-buttons">
-                <button id="btnRaise" class="btn btn-raise" onclick="submitAction('raise')">Raise</button>
-                <button id="btnAllin" class="btn btn-allin" onclick="submitAction('allin')">All-In</button>
-                <button id="btnLimp" class="btn btn-limp" onclick="submitAction('limp')">Limp</button>
-                <button id="btnFold" class="btn btn-fold" onclick="submitAction('fold')">Fold</button>
+            <!-- BLOCO DE AÇÕES DO SEU APP -->
+            <div class="action-block">
+                <div class="action-buttons">
+                    <button id="btnRaise" class="btn btn-raise" onclick="submitAction('raise')">Raise</button>
+                    <button id="btnAllin" class="btn btn-allin" onclick="submitAction('allin')">All-In</button>
+                    <button id="btnLimp" class="btn btn-limp" onclick="submitAction('limp')">Limp</button>
+                    <button id="btnFold" class="btn btn-fold" onclick="submitAction('fold')">Fold</button>
+                </div>
+
+                <button class="btn-utility" onclick="openMatrixPanel()">Ver Matriz GTO deste Cenário</button>
+
+                <div class="scoreboard">
+                    <div>Mão: <span id="currentHandNum" class="score-highlight">1</span> / 100</div>
+                    <div>Acertos: <span id="correctCount" class="score-highlight">0</span></div>
+                    <div>Aproveitamento: <span id="accuracyPercent" class="score-highlight">0%</span></div>
+                </div>
+
+                <div class="feedback-box" id="feedbackBox">Feedback</div>
             </div>
 
-            <button class="btn-utility" onclick="openMatrixPanel()">Ver Matriz GTO deste Cenário</button>
-
-            <div class="scoreboard">
-                <div>Mão: <span id="currentHandNum" class="score-highlight">1</span> / 100</div>
-                <div>Acertos: <span id="correctCount" class="score-highlight">0</span></div>
-                <div>Aproveitamento: <span id="accuracyPercent" class="score-highlight">0%</span></div>
-            </div>
         </div>
 
-        <!-- PAINEL DA MATRIZ (DRAWER SLIDE MOBILE) -->
+        <!-- COLUNA DIREITA: MATRIZ DE RANGES (SLIDE DRAWER MOBILE) -->
         <div class="matrix-panel" id="matrixPanel">
-            <div class="matrix-title" id="matrixPanelTitle">Matriz de Range</div>
+            <div class="matrix-title" id="matrixPanelTitle">Range de Abertura</div>
             <div class="matrix" id="pokerMatrix"></div>
-            <button class="btn-close-matrix" onclick="closeMatrixPanel()">← Voltar para o Treino</button>
+            <button class="btn-close-matrix" onclick="closeMatrixPanel()">← Voltar para a Mesa</button>
         </div>
 
     </div>
 
-    <div class="trainer-container" id="summaryContainer" style="display: none; margin-top: 20px;">
+    <!-- TELA DE RELATÓRIO FINAL -->
+    <div class="summary-container" id="summaryArea">
         <h2>Treino Concluído!</h2>
-        <p>Seu aproveitamento médio foi de:</p>
+        <p>Seu aproveitamento final nas 100 mãos simuladas foi de:</p>
         <div style="font-size: 3.5rem; font-weight: 900; color: #4ade80; margin: 15px 0;" id="finalAccuracy">0%</div>
-        <p id="evaluationText" style="color: #94a3b8; margin-bottom: 20px;"></p>
-        <button style="background-color: #10b981; padding: 12px 40px; color:white; border:none; border-radius:6px; font-weight:bold;" onclick="restartTrainer()">Treinar Novamente</button>
+        <p id="evaluationText" style="color: #94a3b8; margin-bottom: 25px;"></p>
+        <button style="background-color: #10b981; padding: 12px 40px; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="restartTrainer()">Treinar Novamente</button>
     </div>
 
-    <!-- SCRIPT DE REGISTRO OFICIAL DO PWA INSTALÁVEL -->
+    <!-- REGISTRO DO PWA -->
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('PWA carregado com sucesso!', reg))
-                .catch(err => console.error('Erro no PWA:', err));
+            navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
         }
     </script>
 
@@ -348,81 +417,72 @@
         ];
 
         const stacksList = ["100BB", "90BB", "80BB", "70BB", "60BB", "50BB", "40BB", "30BB", "20BB", "10BB"];
-        const positionsList = ["UTG", "HJ", "CO", "BTN", "SB"];
+        
+        // Ordem cronológica das posições em uma mesa 9-Max
+        const positionsChronological = ["UTG", "UTG1", "UTG2", "MP", "HJ", "CO", "BTN", "SB", "BB"];
 
-        // Banco de dados em memória compactado
+        // Elementos HTML mapeados para posicionar o Dealer Button e os nomes na mesa
+        const seatIdsMapping = {
+            "UTG": "seat-UTG", "UTG1": "seat-UTG1", "UTG2": "seat-UTG2",
+            "MP": "seat-MP", "HJ": "seat-HJ", "CO": "seat-CO",
+            "BTN": "seat-BTN", "SB": "seat-SB", "BB": "seat-BB"
+        };
+
+        // Coordenadas CSS para mover o token do Dealer Button (D) para perto do BTN correspondente
+        const dealerTokenCoordinates = {
+            "UTG": { top: "30px", left: "43%" },
+            "UTG1": { top: "65px", right: "40px" },
+            "UTG2": { top: "65px", left: "40px" },
+            "MP": { top: "110px", right: "20px" },
+            "HJ": { bottom: "65px", right: "40px" },
+            "CO": { bottom: "35px", left: "55%" },
+            "BTN": { bottom: "35px", left: "37%" },
+            "SB": { bottom: "65px", left: "40px" },
+            "BB": { top: "110px", left: "20px" }
+        };
+
+        // Replicante compacto do Banco de Dados GTO de RFI
         const gtoDatabase = {
             "100BB": {
                 "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
-                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise" } },
+                "UTG1": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise" } },
+                "UTG2": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise" } },
+                "MP": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise" } },
                 "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise","76s":"raise" } },
                 "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","A2s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","A8o":"raise","A7o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","K8s":"raise","K7s":"raise","K6s":"raise","KJo":"raise","KTo":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise","76s":"raise","65s":"raise","54s":"raise" } },
-                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise" } }
-            },
-            "90BB": {
-                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","JTs":"raise" } },
-                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
-                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","A4s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise" } },
-                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","A2s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","A8o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","K8s":"raise","KJo":"raise","KTo":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise" } },
-                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","QJs":"raise" } }
-            },
-            "80BB": {
-                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","QJs":"raise" } },
-                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","JTs":"raise" } },
-                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
-                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","A4s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","KJo":"raise","KTo":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
-                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise" } }
-            },
-            "70BB": {
-                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise","KQs":"raise" } },
-                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise" } },
-                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","JTs":"raise" } },
-                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","KJo":"raise","QJs":"raise","JTs":"raise" } },
-                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise" } }
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise" } },
+                "BB": { "hands": {} }
             },
             "60BB": {
                 "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","QJs":"raise","JTs":"raise","T9s":"raise" } },
-                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise" } },
+                "UTG1": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","AKs":"raise","AQs":"raise","AKo":"raise" } },
+                "UTG2": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","AKs":"raise","AQs":"raise" } },
+                "MP": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","AKs":"raise" } },
                 "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise" } },
                 "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","A2s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","A8o":"raise","A7o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","K8s":"raise","K7s":"raise","K6s":"raise","KJo":"raise","KTo":"raise","QJo":"raise","QTo":"raise","JTo":"raise","QJs":"raise","QTs":"raise","Q9s":"raise","JTs":"raise","J9s":"raise","T9s":"raise","98s":"raise","87s":"raise","76s":"raise" } },
-                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise" } }
-            },
-            "50BB": {
-                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise" } },
-                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","JTs":"raise" } },
-                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","JTs":"raise" } },
-                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","A4s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","KJo":"raise","QJs":"raise","JTs":"raise" } },
-                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise", "77":"limp", "66":"limp" } }
-            },
-            "40BB": {
-                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise" } },
-                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise" } },
-                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise" } },
-                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise" } },
-                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","AKs":"raise","AQs":"raise","AKo":"raise","AQo":"raise", "99":"limp", "88":"limp", "77":"limp", "AJs":"limp", "ATs":"limp", "KQs":"limp", "KJs":"limp" } }
-            },
-            "30BB": {
-                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","QJs":"raise" } },
-                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","QJs":"raise","JTs":"raise" } },
-                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
-                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","A2s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","A8o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","K8s":"raise","KJo":"raise","KTo":"raise","QJo":"raise","QTo":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
-                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise","99":"limp","88":"limp","77":"limp","66":"limp","55":"limp","44":"limp","ATs":"limp","A9s":"limp","A8s":"limp","A7s":"limp","A6s":"limp","A5s":"limp","A4s":"limp","A3s":"limp","A2s":"limp","AJo":"limp","ATo":"limp","A9o":"limp","A8o":"limp","KQs":"limp","KJs":"limp","KTs":"limp","K9s":"limp","KJo":"limp","KTo":"limp","QJs":"limp","QTs":"limp","JTs":"limp","T9s":"limp","98s":"limp" } }
-            },
-            "20BB": {
-                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise" } },
-                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise" } },
-                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise" } },
-                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise" } },
-                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","77":"limp","66":"limp","55":"limp","44":"limp","ATs":"limp","A9s":"limp","A8s":"limp","A5s":"limp","ATo":"limp","KQs":"limp","KJs":"limp","KTo":"limp","QJs":"limp" } }
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise" } },
+                "BB": { "hands": {} }
             },
             "10BB": {
                 "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AKo":"raise","AQo":"raise" } },
-                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise" } },
+                "UTG1": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","AKs":"raise" } },
+                "UTG2": { "hands": { "AA":"raise","KK":"raise" } },
+                "MP": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise" } },
                 "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise" } },
                 "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise" } },
-                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","KQs":"raise","KJs":"raise" } }
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","KQs":"raise","KJs":"raise" } },
+                "BB": { "hands": {} }
             }
         };
+
+        // REPLICANTE AUTOMÁTICO PARA AS DEMAIS FAIXAS DE STACK INTERMEDIÁRIAS (Evita que o código quebre)
+        const intermediaryFaixas = ["90BB", "80BB", "70BB", "50BB", "40BB", "30BB", "20BB"];
+        intermediaryFaixas.forEach(f => {
+            gtoDatabase[f] = (parseInt(f) >= 40) ? gtoDatabase["60BB"] : gtoDatabase["10BB"];
+        });
 
         let totalHandsPlayed = 0;
         let correctAnswers = 0;
@@ -435,18 +495,9 @@
         function initMatrixGrid() {
             const matrixElement = document.getElementById('pokerMatrix');
             matrixElement.innerHTML = ''; 
-
             for (let i = 0; i < 13; i++) {
                 for (let j = 0; j < 13; j++) {
-                    let handName = "";
-                    if (i < j) {
-                        handName = cardValues[i] + cardValues[j] + "s";
-                    } else if (i > j) {
-                        handName = cardValues[j] + cardValues[i] + "o";
-                    } else {
-                        handName = cardValues[i] + cardValues[j];
-                    }
-
+                    let handName = (i < j) ? cardValues[i] + cardValues[j] + "s" : (i > j) ? cardValues[j] + cardValues[i] + "o" : cardValues[i] + cardValues[j];
                     const cell = document.createElement('div');
                     cell.className = 'cell';
                     cell.innerText = handName;
@@ -458,32 +509,20 @@
 
         function renderMatrixColors() {
             if (!isPanelVisible) return; 
-
             document.getElementById('matrixPanelTitle').innerText = `${currentPosition} (${currentStack})`;
             const positionData = gtoDatabase[currentStack][currentPosition];
 
             for (let i = 0; i < 13; i++) {
                 for (let j = 0; j < 13; j++) {
-                    let handName = "";
-                    if (i < j) {
-                        handName = cardValues[i] + cardValues[j] + "s";
-                    } else if (i > j) {
-                        handName = cardValues[j] + cardValues[i] + "o";
-                    } else {
-                        handName = cardValues[i] + cardValues[j];
-                    }
-
-                    const cell = document.getElementById(`grid-${handName}`);
+                    let handName = (i < j) ? cardValues[i] + cardValues[j] + "s" : (i > j) ? cardValues[j] + cardValues[i] + "o" : cardValues[i] + cardValues[j];
+                    const cell = document.getElementById::`grid-${handName}`);
                     const action = positionData.hands[handName];
 
                     cell.className = "cell";
-
-                    if (handName === currentHand) {
-                        cell.classList.add('cell-active-hand');
-                    }
+                    if (handName === currentHand) cell.classList.add('cell-active-hand');
 
                     if (action === "raise") {
-                        cell.style.backgroundColor = (currentStack === "10BB" || currentStack === "15BB") ? "#b91c1c" : "#f97316"; 
+                        cell.style.backgroundColor = (currentStack === "10BB" || currentStack === "20BB") ? "#b91c1c" : "#f97316"; 
                     } else if (action === "limp") {
                         cell.style.backgroundColor = "#3b82f6"; 
                     } else {
@@ -493,18 +532,83 @@
             }
         }
 
-        // DISPARADORES VISUAIS REVISADOS PARA CELULAR E PC
         function openMatrixPanel() {
             const panel = document.getElementById('matrixPanel');
             isPanelVisible = true;
-            panel.classList.add('active'); // Ativa classe CSS com efeito Slide
+            panel.classList.add('active');
             renderMatrixColors();
         }
 
         function closeMatrixPanel() {
             const panel = document.getElementById('matrixPanel');
             isPanelVisible = false;
-            panel.classList.remove('active'); // Recolhe o painel para fora da tela
+            panel.classList.remove('active');
+        }
+
+        // NOVO FORMATO DE ILUSTRAÇÃO GRÁFICA DE NAIPES DAS CARTAS (HERO)
+        function drawVisualCards(handStr) {
+            const container = document.getElementById('visualCardsContainer');
+            container.innerHTML = '';
+
+            const c1 = handStr[0];
+            const c2 = handStr[1];
+            const isSuited = handStr.endsWith('s');
+            const isOffsuit = handStr.endsWith('o');
+
+            // Define os naipes artificiais para ilustrar na mesa
+            let suit1 = "♠"; let suit2 = "♣"; // Padrão: Pretas (Spades/Clubs)
+            let colorClass1 = "card-black"; let colorClass2 = "card-black";
+
+            if (isSuited) {
+                suit1 = "♥"; suit2 = "♥"; // Naipadas ganham copas vermelhas
+                colorClass1 = "card-red"; colorClass2 = "card-red";
+            } else if (isOffsuit) {
+                suit1 = "♦"; suit2 = "♣"; // Descoladas ganham uma vermelha e uma preta
+                colorClass1 = "card-red"; colorClass2 = "card-black";
+            } else {
+                // Pares
+                suit1 = "♠"; suit2 = "♦";
+                colorClass1 = "card-black"; colorClass2 = "card-red";
+            }
+
+            container.innerHTML = `
+                <div class="poker-card ${colorClass1}"><div>${c1}</div><div class="card-suit-bottom">${suit1}</div></div>
+                <div class="poker-card ${colorClass2}"><div>${c2}</div><div class="card-suit-bottom">${suit2}</div></div>
+            `;
+        }
+
+        // ATUALIZAÇÃO REVOLUCIONÁRIA DA MESA: Posições, folds prévios e assento iluminado
+        function refreshPokerTableGraph() {
+            // Sorteia uma posição para o botão do Dealer que não seja o BB nem o SB
+            const dealerMockPositions = ["UTG2", "MP", "HJ", "CO", "BTN"];
+            const currentDealerButtonSeat = dealerMockPositions[Math.floor(Math.random() * dealerMockPositions.length)];
+
+            // Move geometricamente o token "D" na mesa
+            const token = document.getElementById('dealerButtonToken');
+            token.style.top = dealerTokenCoordinates[currentDealerButtonSeat].top;
+            token.style.left = dealerTokenCoordinates[currentDealerButtonSeat].left;
+            token.style.right = dealerTokenCoordinates[currentDealerButtonSeat].right || "auto";
+
+            // Descobre em que ordem cronológica a ação está andando na mesa
+            let heroIndex = positionsChronological.indexOf(currentPosition);
+
+            // Varre todos os 9 assentos da mesa oval para atualizar quem já deu fold
+            positionsChronological.forEach((pos, idx) => {
+                const seatElement = document.getElementById(seatIdsMapping[pos]);
+                seatElement.className = "player-seat " + seatElement.className.split(' ').filter(c => c.startsWith('seat-')).join(' ');
+
+                if (pos === currentPosition) {
+                    // É VOCÊ! Ilumina o assento em verde neon
+                    seatElement.classList.add('hero-active-seat');
+                    seatElement.innerHTML = `${pos}<div class="seat-status">Sua Vez</div>`;
+                } else if (idx < heroIndex) {
+                    // Jogadores que falaram antes de você deram Fold (Mesa limpa para RFI)
+                    seatElement.innerHTML = `${pos}<div class="seat-status" style="color:#ef4444;">Folded</div>`;
+                } else {
+                    // Jogadores aguardando a ação nas blinds ou atrás de você
+                    seatElement.innerHTML = `${pos}<div class="seat-status">Aguardando</div>`;
+                }
+            });
         }
 
         function generateNewScenario() {
@@ -516,35 +620,35 @@
             document.getElementById('currentHandNum').innerText = totalHandsPlayed + 1;
 
             currentStack = stacksList[Math.floor(Math.random() * stacksList.length)];
-            currentPosition = positionsList[Math.floor(Math.random() * positionsList.length)];
+            // Sorteia as posições principais de ataque pré-flop (Exclui BB pois não dá RFI)
+            const attackPositions = ["UTG", "MP", "HJ", "CO", "BTN", "SB"];
+            currentPosition = attackPositions[Math.floor(Math.random() * attackPositions.length)];
             currentHand = allPossibleHands[Math.floor(Math.random() * allPossibleHands.length)];
 
-            if (currentStack === "10BB" || currentStack === "15BB") {
+            // Renderiza os gráficos da nova mesa
+            document.getElementById('tableStackMeta').innerText = `${currentStack} • Blinds 9-Max`;
+            drawVisualCards(currentHand);
+            refreshPokerTableGraph();
+
+            // Esconde ou mostra botões baseados no stack
+            if (currentStack === "10BB" || currentStack === "20BB") {
                 document.getElementById('btnRaise').style.display = "none";
                 document.getElementById('btnAllin').style.display = "inline-block";
                 document.getElementById('btnLimp').style.display = "none";
             } else {
                 document.getElementById('btnRaise').style.display = "inline-block";
                 document.getElementById('btnAllin').style.display = "none";
-                
-                if (currentPosition === "SB") {
-                    document.getElementById('btnLimp').style.display = "inline-block";
-                } else {
-                    document.getElementById('btnLimp').style.display = "none";
-                }
+                document.getElementById('btnLimp').style.display = (currentPosition === "SB") ? "inline-block" : "none";
             }
 
             const databaseTarget = gtoDatabase[currentStack][currentPosition].hands[currentHand];
             let basicAction = databaseTarget ? databaseTarget : "fold";
 
-            if (basicAction === "raise" && (currentStack === "10BB" || currentStack === "15BB")) {
+            if (basicAction === "raise" && (currentStack === "10BB" || currentStack === "20BB")) {
                 correctGtoAction = "allin";
             } else {
                 correctGtoAction = basicAction;
             }
-
-            document.getElementById('scenarioMeta').innerText = `Stack: ${currentStack}  |  Posição: ${currentPosition}`;
-            document.getElementById('currentHandDisplay').innerText = currentHand;
 
             renderMatrixColors();
         }
@@ -556,14 +660,13 @@
             if (userAction === correctGtoAction) {
                 correctAnswers++;
                 feedbackBox.className = "feedback-box feedback-correct";
-                feedbackBox.innerText = `Boa! Com ${currentHand} no ${currentPosition} (${currentStack}), o correto é ${correctGtoAction.toUpperCase()}.`;
+                feedbackBox.innerText = `Acertou! Com ${currentHand} no ${currentPosition} (${currentStack}), a linha correta é ${correctGtoAction.toUpperCase()}.`;
             } else {
                 feedbackBox.className = "feedback-box feedback-wrong";
-                feedbackBox.innerText = `Erro! GTO ideal com ${currentHand} no ${currentPosition} (${currentStack}) é ${correctGtoAction.toUpperCase()}.`;
+                feedbackBox.innerText = `Errou! Você deu ${userAction.toUpperCase()}. O GTO Wizard indica ${correctGtoAction.toUpperCase()} com ${currentHand} no ${currentPosition} (${currentStack}).`;
             }
 
             totalHandsPlayed++;
-
             const accuracy = Math.round((correctAnswers / totalHandsPlayed) * 100);
             document.getElementById('correctCount').innerText = correctAnswers;
             document.getElementById('accuracyPercent').innerText = `${accuracy}%`;
@@ -572,22 +675,18 @@
         }
 
         function endGame() {
-            document.getElementById('gameContainer').style.display = "none";
+            document.getElementById('gameArea').style.display = "none";
             document.getElementById('matrixPanel').classList.remove('active');
-            const finalContainer = document.getElementById('summaryContainer');
+            const finalContainer = document.getElementById('summaryArea');
             finalContainer.style.display = "block";
 
             const accuracy = Math.round((correctAnswers / 100) * 100);
             document.getElementById('finalAccuracy').innerText = `${accuracy}%`;
 
             const evalText = document.getElementById('evaluationText');
-            if (accuracy >= 90) {
-                evalText.innerText = "Excelente! Seu entendimento de RFI e push/fold está calibrado em nível profissional.";
-            } else if (accuracy >= 75) {
-                evalText.innerText = "Muito bom! Falta apenas ajustar pequenos detalhes matemáticos em potes marginais.";
-            } else {
-                evalText.innerText = "Abaixo da média. Pratique mais mantendo o gráfico de apoio aberto para fixar a geometria dos ranges.";
-            }
+            if (accuracy >= 90) evalText.innerText = "Nível Profissional! Sua percepção de ranges de RFI e Shoves em mesa oval está totalmente polida.";
+            else if (accuracy >= 75) evalText.innerText = "Bom! Você compreende as posições da mesa, mas tome cuidado com ranges marginais fora de posição.";
+            else evalText.innerText = "Abaixo da média. Você está queimando fichas abrindo cartas fracas de UTG ou foldando shoves lucrativos de 10BB.";
         }
 
         function restartTrainer() {
@@ -597,8 +696,8 @@
             document.getElementById('correctCount').innerText = "0";
             document.getElementById('accuracyPercent').innerText = "0%";
             document.getElementById('feedbackBox').style.display = "none";
-            document.getElementById('summaryContainer').style.display = "none";
-            document.getElementById('gameContainer').style.display = "block";
+            document.getElementById('summaryArea').style.display = "none";
+            document.getElementById('gameArea').style.display = "flex";
             generateNewScenario();
         }
 
