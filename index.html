@@ -3,60 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTT GTO Trainer - Ultimate Edition</title>
+    <title>MTT GTO Quiz Trainer</title>
+    
+    <!-- CONEXÃO OBRIGATÓRIA PARA RECONHECER O INSTALADOR DO PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e293b">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #121824;
             color: #ffffff;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            overflow-x: hidden;
         }
 
         h1 {
             color: #4ade80;
             margin-bottom: 5px;
+            font-size: 1.6rem;
+            text-align: center;
         }
 
         p.subtitle {
             color: #94a3b8;
             margin-top: 0;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            text-align: center;
         }
 
-        /* Layout Principal com Split Lateral */
+        /* Layout Principal adaptável */
         .app-layout {
             display: flex;
             gap: 25px;
-            max-width: 1200px;
+            max-width: 1100px;
             width: 100%;
             justify-content: center;
             align-items: flex-start;
+            position: relative;
         }
 
         .trainer-container {
             background-color: #1e293b;
-            padding: 20px 30px;
+            padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             flex: 1;
-            max-width: 600px;
+            max-width: 550px;
             box-sizing: border-box;
             text-align: center;
         }
 
-        /* Coluna da Direita (Matriz Ocultável) */
+        /* PAINEL DA MATRIZ: Se adapta dinamicamente entre PC e Celular */
         .matrix-panel {
             background-color: #1e293b;
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            display: none; /* Começa oculto */
+            display: none; 
             flex-direction: column;
             align-items: center;
+            box-sizing: border-box;
         }
 
         .matrix-title {
@@ -71,8 +85,8 @@
             display: grid;
             grid-template-columns: repeat(13, 1fr);
             gap: 2px;
-            width: 380px;
-            height: 380px;
+            width: min(90vw, 380px);
+            height: min(90vw, 380px);
         }
 
         .cell {
@@ -81,13 +95,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.65rem;
+            font-size: clamp(0.55rem, 2.5vw, 0.65rem);
             font-weight: bold;
             color: #ffffff;
             user-select: none;
         }
 
-        /* Destaca a mão que o usuário recebeu no quiz */
         .cell-active-hand {
             outline: 2px solid #fbbf24;
             box-shadow: 0 0 10px #fbbf24;
@@ -103,21 +116,21 @@
         }
 
         .scenario-title {
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #94a3b8;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
 
         .scenario-details {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: bold;
             color: #ffffff;
             margin: 10px 0;
         }
 
         .hand-display {
-            font-size: 2.5rem;
+            font-size: 2.3rem;
             font-weight: 800;
             color: #fbbf24;
             background-color: #1e293b;
@@ -129,7 +142,7 @@
 
         .action-buttons {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             justify-content: center;
             margin-bottom: 15px;
             height: 50px;
@@ -137,57 +150,63 @@
         }
 
         .btn {
-            padding: 12px 24px;
-            font-size: 1.05rem;
+            padding: 12px 20px;
+            font-size: 1rem;
             font-weight: bold;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
             color: white;
-            min-width: 100px;
+            flex: 1;
+            max-width: 120px;
         }
 
         .btn-raise { background-color: #f97316; }
-        .btn-raise:hover { background-color: #ea580c; }
-        
         .btn-allin { background-color: #b91c1c; }
-        .btn-allin:hover { background-color: #991b1b; }
-
         .btn-limp { background-color: #3b82f6; }
-        .btn-limp:hover { background-color: #2563eb; }
-
         .btn-fold { background-color: #4b5563; }
-        .btn-fold:hover { background-color: #374151; }
 
-        /* Botão União Utilitário para Ver Gráfico */
         .btn-utility {
             background-color: #0284c7;
             color: white;
-            padding: 10px 20px;
-            font-size: 0.95rem;
+            padding: 12px 20px;
+            font-size: 1rem;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             margin-bottom: 20px;
             font-weight: bold;
-            transition: background-color 0.2s;
+            width: 100%;
+            max-width: 300px;
         }
-        .btn-utility:hover { background-color: #0369a1; }
+
+        /* Botão para fechar a matriz no Celular */
+        .btn-close-matrix {
+            display: none;
+            background-color: #ef4444;
+            color: white;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: bold;
+            width: 100%;
+            max-width: 380px;
+        }
 
         .scoreboard {
             display: flex;
             justify-content: space-between;
             background-color: #0f172a;
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
-        .score-highlight {
-            color: #4ade80;
-            font-weight: bold;
-        }
+        .score-highlight { color: #4ade80; font-weight: bold; }
 
         .feedback-box {
             padding: 12px;
@@ -195,43 +214,60 @@
             margin-bottom: 15px;
             font-weight: bold;
             display: none;
+            font-size: 0.95rem;
             line-height: 1.4;
         }
 
-        .feedback-correct {
-            background-color: rgba(74, 222, 128, 0.2);
-            color: #4ade80;
-            border: 1px solid #4ade80;
+        .feedback-correct { background-color: rgba(74, 222, 128, 0.2); color: #4ade80; border: 1px solid #4ade80; }
+        .feedback-wrong { background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+
+        /* REGRAS EXCLUSIVAS PARA CELULAR (EFEITO SLIDE LATERAL) */
+        @media (max-width: 768px) {
+            .app-layout {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .matrix-panel {
+                position: fixed;
+                top: 0;
+                right: -100%; /* Joga completamente para fora da tela na direita */
+                width: 100vw;
+                height: 100vh;
+                z-index: 999;
+                border-radius: 0;
+                justify-content: center;
+                transition: right 0.3s ease-in-out; /* Faz o efeito de deslizar suave */
+            }
+
+            /* Quando ativo, desliza para dentro da tela ocupando tudo */
+            .matrix-panel.active {
+                display: flex !important;
+                right: 0;
+            }
+
+            .btn-close-matrix {
+                display: block; /* Só aparece no celular */
+            }
         }
 
-        .feedback-wrong {
-            background-color: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-            border: 1px solid #ef4444;
-        }
-
-        .btn-restart {
-            background-color: #10b981;
-            padding: 12px 40px;
-            font-size: 1.1rem;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
+        /* Se for computador, mantém o comportamento lado a lado padrão */
+        @media (min-width: 769px) {
+            .matrix-panel.active {
+                display: flex !important;
+            }
         }
     </style>
 </head>
 <body>
 
     <h1>MTT GTO Quiz Trainer</h1>
-    <p class="subtitle">Laboratório Avançado com Matriz do Solver Integrada</p>
+    <p class="subtitle">Laboratório de Ranges Mobile-Ready</p>
 
-    <!-- LAYOUT PRINCIPAL EM DUAS COLUNAS -->
     <div class="app-layout">
         
-        <!-- COLUNA ESQUERDA: O JOGO DO TREINO -->
+        <!-- PAINEL DA MESA/TREINO -->
         <div class="trainer-container" id="gameContainer">
-            
             <div class="feedback-box" id="feedbackBox">Feedback aqui</div>
 
             <div class="scenario-box">
@@ -249,8 +285,7 @@
                 <button id="btnFold" class="btn btn-fold" onclick="submitAction('fold')">Fold</button>
             </div>
 
-            <!-- Botão de Alternância do Painel de Range -->
-            <button class="btn-utility" onclick="toggleMatrixPanel()">Ver Matriz GTO deste Cenário</button>
+            <button class="btn-utility" onclick="openMatrixPanel()">Ver Matriz GTO deste Cenário</button>
 
             <div class="scoreboard">
                 <div>Mão: <span id="currentHandNum" class="score-highlight">1</span> / 100</div>
@@ -259,22 +294,31 @@
             </div>
         </div>
 
-        <!-- COLUNA DIREITA: A MATRIZ DINÂMICA DO WIZARD -->
+        <!-- PAINEL DA MATRIZ (DRAWER SLIDE MOBILE) -->
         <div class="matrix-panel" id="matrixPanel">
             <div class="matrix-title" id="matrixPanelTitle">Matriz de Range</div>
             <div class="matrix" id="pokerMatrix"></div>
+            <button class="btn-close-matrix" onclick="closeMatrixPanel()">← Voltar para o Treino</button>
         </div>
 
     </div>
 
-    <!-- TELA DE RELATÓRIO FINAL -->
     <div class="trainer-container" id="summaryContainer" style="display: none; margin-top: 20px;">
         <h2>Treino Concluído!</h2>
-        <p>Seu aproveitamento médio nas 100 mãos GTO foi de:</p>
-        <div class="summary-score" id="finalAccuracy" style="font-size: 4rem; font-weight: 900; color: #4ade80; margin: 20px 0;">0%</div>
-        <p id="evaluationText" style="color: #94a3b8; margin-bottom: 25px;"></p>
-        <button class="btn-restart" onclick="restartTrainer()">Treinar Novamente</button>
+        <p>Seu aproveitamento médio foi de:</p>
+        <div style="font-size: 3.5rem; font-weight: 900; color: #4ade80; margin: 15px 0;" id="finalAccuracy">0%</div>
+        <p id="evaluationText" style="color: #94a3b8; margin-bottom: 20px;"></p>
+        <button style="background-color: #10b981; padding: 12px 40px; color:white; border:none; border-radius:6px; font-weight:bold;" onclick="restartTrainer()">Treinar Novamente</button>
     </div>
+
+    <!-- SCRIPT DE REGISTRO OFICIAL DO PWA INSTALÁVEL -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('PWA carregado com sucesso!', reg))
+                .catch(err => console.error('Erro no PWA:', err));
+        }
+    </script>
 
     <script>
         const cardValues = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
@@ -306,6 +350,7 @@
         const stacksList = ["100BB", "90BB", "80BB", "70BB", "60BB", "50BB", "40BB", "30BB", "20BB", "10BB"];
         const positionsList = ["UTG", "HJ", "CO", "BTN", "SB"];
 
+        // Banco de dados em memória compactado
         const gtoDatabase = {
             "100BB": {
                 "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
@@ -385,9 +430,8 @@
         let currentPosition = "";
         let currentHand = "";
         let correctGtoAction = "";
-        let isPanelVisible = false; // Estado do painel lateral
+        let isPanelVisible = false;
 
-        // FUNÇÃO: Cria a grade 13x13 na barra lateral (Roda apenas uma vez no início)
         function initMatrixGrid() {
             const matrixElement = document.getElementById('pokerMatrix');
             matrixElement.innerHTML = ''; 
@@ -412,9 +456,8 @@
             }
         }
 
-        // FUNÇÃO: Pinta e atualiza as cores da matriz com base no cenário do Quiz
         function renderMatrixColors() {
-            if (!isPanelVisible) return; // Economiza processamento se estiver fechado
+            if (!isPanelVisible) return; 
 
             document.getElementById('matrixPanelTitle').innerText = `${currentPosition} (${currentStack})`;
             const positionData = gtoDatabase[currentStack][currentPosition];
@@ -433,17 +476,13 @@
                     const cell = document.getElementById(`grid-${handName}`);
                     const action = positionData.hands[handName];
 
-                    // Remove classes antigas de destaque
                     cell.className = "cell";
 
-                    // Destaca fisicamente a mão atual sorteada para o usuário jogar
                     if (handName === currentHand) {
                         cell.classList.add('cell-active-hand');
                     }
 
-                    // Pinta de acordo com o GTO real mapeado
                     if (action === "raise") {
-                        // Se o stack for curto, pinta o raise de vermelho escuro (allin)
                         cell.style.backgroundColor = (currentStack === "10BB" || currentStack === "15BB") ? "#b91c1c" : "#f97316"; 
                     } else if (action === "limp") {
                         cell.style.backgroundColor = "#3b82f6"; 
@@ -454,17 +493,18 @@
             }
         }
 
-        // FUNÇÃO: Liga/Desliga a exibição da coluna da direita
-        function toggleMatrixPanel() {
+        // DISPARADORES VISUAIS REVISADOS PARA CELULAR E PC
+        function openMatrixPanel() {
             const panel = document.getElementById('matrixPanel');
-            isPanelVisible = !isPanelVisible;
+            isPanelVisible = true;
+            panel.classList.add('active'); // Ativa classe CSS com efeito Slide
+            renderMatrixColors();
+        }
 
-            if (isPanelVisible) {
-                panel.style.display = "flex";
-                renderMatrixColors(); // Força a pintura imediata
-            } else {
-                panel.style.display = "none";
-            }
+        function closeMatrixPanel() {
+            const panel = document.getElementById('matrixPanel');
+            isPanelVisible = false;
+            panel.classList.remove('active'); // Recolhe o painel para fora da tela
         }
 
         function generateNewScenario() {
@@ -479,7 +519,6 @@
             currentPosition = positionsList[Math.floor(Math.random() * positionsList.length)];
             currentHand = allPossibleHands[Math.floor(Math.random() * allPossibleHands.length)];
 
-            // Controle dinâmico visual dos botões
             if (currentStack === "10BB" || currentStack === "15BB") {
                 document.getElementById('btnRaise').style.display = "none";
                 document.getElementById('btnAllin').style.display = "inline-block";
@@ -504,10 +543,9 @@
                 correctGtoAction = basicAction;
             }
 
-            document.getElementById('scenarioMeta').innerText = `Stack: ${currentStack}  |  Posição: ${currentPosition} (Mesa em Gaps)`;
+            document.getElementById('scenarioMeta').innerText = `Stack: ${currentStack}  |  Posição: ${currentPosition}`;
             document.getElementById('currentHandDisplay').innerText = currentHand;
 
-            // Atualiza o desenho se o painel estiver aberto no momento da nova mão
             renderMatrixColors();
         }
 
@@ -518,10 +556,10 @@
             if (userAction === correctGtoAction) {
                 correctAnswers++;
                 feedbackBox.className = "feedback-box feedback-correct";
-                feedbackBox.innerText = `Boa! Com ${currentHand} no ${currentPosition} (${currentStack}), a ação ideal é ${correctGtoAction.toUpperCase()}.`;
+                feedbackBox.innerText = `Boa! Com ${currentHand} no ${currentPosition} (${currentStack}), o correto é ${correctGtoAction.toUpperCase()}.`;
             } else {
                 feedbackBox.className = "feedback-box feedback-wrong";
-                feedbackBox.innerText = `Erro! Você escolheu ${userAction.toUpperCase()}. O GTO correto com ${currentHand} no ${currentPosition} (${currentStack}) é ${correctGtoAction.toUpperCase()}.`;
+                feedbackBox.innerText = `Erro! GTO ideal com ${currentHand} no ${currentPosition} (${currentStack}) é ${correctGtoAction.toUpperCase()}.`;
             }
 
             totalHandsPlayed++;
@@ -535,7 +573,7 @@
 
         function endGame() {
             document.getElementById('gameContainer').style.display = "none";
-            document.getElementById('matrixPanel').style.display = "none";
+            document.getElementById('matrixPanel').classList.remove('active');
             const finalContainer = document.getElementById('summaryContainer');
             finalContainer.style.display = "block";
 
@@ -544,11 +582,11 @@
 
             const evalText = document.getElementById('evaluationText');
             if (accuracy >= 90) {
-                evalText.innerText = "Excelente! Seu instinto GTO para ranges lineares e de push/fold está calibrado em nível profissional.";
+                evalText.innerText = "Excelente! Seu entendimento de RFI e push/fold está calibrado em nível profissional.";
             } else if (accuracy >= 75) {
-                evalText.innerText = "Bom! Domínio aceitável, mas use a matriz lateral para identificar quais mãos marginais você está superestimando.";
+                evalText.innerText = "Muito bom! Falta apenas ajustar pequenos detalhes matemáticos em potes marginais.";
             } else {
-                evalText.innerText = "Precisa de ajustes urgentes. Mantenha a matriz aberta durante o treino para forçar sua mente a memorizar o desenho geométrico dos ranges.";
+                evalText.innerText = "Abaixo da média. Pratique mais mantendo o gráfico de apoio aberto para fixar a geometria dos ranges.";
             }
         }
 
@@ -564,16 +602,8 @@
             generateNewScenario();
         }
 
-        // Execuções Iniciais
         initMatrixGrid();
         generateNewScenario();
-    </script>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('PWA Service Worker registrado com sucesso!', reg))
-                .catch(err => console.error('Erro ao registrar Service Worker:', err));
-        }
     </script>
 </body>
 </html>
