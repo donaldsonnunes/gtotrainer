@@ -144,7 +144,7 @@
         .seat-status { color: #94a3b8; font-size: 0.65rem; margin-top: 2px; }
         .hero-active-seat .seat-status { color: #4ade80; }
 
-        /* COORDENADAS SENTIDO HORÁRIO CORRIGIDAS */
+        /* COORDENADAS DO RELÓGIO HORÁRIO */
         .seat-0 { top: 30px; left: 15px; }     /* UTG */
         .seat-1 { top: -5px; left: 43%; }      /* UTG+1 */
         .seat-2 { top: 30px; right: 15px; }    /* UTG+2 */
@@ -155,7 +155,7 @@
         .seat-7 { bottom: 30px; left: 15px; }  /* SB */
         .seat-8 { top: 110px; left: -15px; }   /* BB */
 
-        /* BOTÃO DO DEALER (D) ANCORADO NO BTN */
+        /* BOTÃO DO DEALER (D) */
         .dealer-button {
             position: absolute;
             width: 22px;
@@ -206,143 +206,4 @@
         }
         .btn-raise { background-color: #f97316; }
         .btn-raise:hover { background-color: #ea580c; }
-        .btn-allin { background-color: #b91c1c; }
-        .btn-allin:hover { background-color: #991b1b; }
-        .btn-limp { background-color: #3b82f6; }
-        .btn-limp:hover { background-color: #2563eb; }
-        .btn-fold { background-color: #4b5563; }
-        .btn-fold:hover { background-color: #374151; }
-
-        .btn-utility {
-            background-color: #0284c7;
-            color: white;
-            padding: 12px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-bottom: 15px;
-            font-weight: bold;
-            width: 100%;
-        }
-
-        .scoreboard {
-            display: flex;
-            justify-content: space-between;
-            background-color: #0f172a;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-        }
-        .score-highlight { color: #4ade80; font-weight: bold; }
-
-        .feedback-box {
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 15px;
-            font-weight: bold;
-            display: none;
-            font-size: 0.9rem;
-            line-height: 1.4;
-            text-align: left;
-        }
-        .feedback-correct { background-color: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid #4ade80; }
-        .feedback-wrong { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
-
-        /* PAINEL DE RANGE DRAWER SLIDE */
-        .matrix-panel {
-            background-color: #1e293b;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            box-sizing: border-box;
-        }
-
-        .matrix-title { font-size: 1rem; color: #4ade80; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; }
-        
-        .matrix {
-            display: grid;
-            grid-template-columns: repeat(13, 1fr);
-            gap: 2px;
-            width: min(90vw, 360px);
-            height: min(90vw, 360px);
-        }
-
-        .cell {
-            background-color: #334155;
-            border-radius: 2px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: clamp(0.55rem, 2.2vw, 0.65rem);
-            font-weight: bold;
-            color: #ffffff;
-            user-select: none;
-        }
-        .cell-active-hand { outline: 2px solid #fbbf24; box-shadow: 0 0 10px #fbbf24; z-index: 10; }
-
-        .btn-close-matrix {
-            display: none;
-            background-color: #ef4444;
-            color: white;
-            padding: 12px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 15px;
-            font-weight: bold;
-            width: 100%;
-        }
-
-        @media (max-width: 768px) {
-            .app-layout { flex-direction: column; align-items: center; }
-            .matrix-panel {
-                position: fixed;
-                top: 0;
-                right: -100%;
-                width: 100vw;
-                height: 100vh;
-                z-index: 999;
-                border-radius: 0;
-                justify-content: center;
-                transition: right 0.25s ease-in-out;
-            }
-            .matrix-panel.active { display: flex !important; right: 0; }
-            .btn-close-matrix { display: block; }
-        }
-
-        @media (min-width: 769px) {
-            .matrix-panel.active { display: flex !important; }
-        }
-
-        .summary-container { text-align: center; padding: 30px; background-color: #1e293b; border-radius: 12px; display: none; max-width: 500px; }
-    </style>
-</head>
-<body>
-
-    <h1>MTT GTO Quiz Trainer</h1>
-    <p class="subtitle">Mesa 9-Max Simulada de Torneio</p>
-
-    <div class="app-layout">
-        
-        <div class="main-game-container" id="gameArea">
-            
-            <div class="poker-table-area">
-                
-                <div class="felt-center">
-                    <div class="table-meta-info" id="tableStackMeta">--</div>
-                    <div class="cards-delivery" id="visualCardsContainer"></div>
-                </div>
-
-                <div id="seat-UTG" class="player-seat seat-0">UTG<div class="seat-status">Folded</div></div>
-                <div id="seat-UTG1" class="player-seat seat-1">UTG+1<div class="seat-status">Folded</div></div>
-                <div id="seat-UTG2" class="player-seat seat-2">UTG+2<div class="seat-status">Folded</div></div>
-                <div id="seat-MP" class="player-seat seat-3">MP<div class="seat-status">Folded</div></div>
-                <div id="seat-HJ" class="player-seat seat-4">HJ<div class="seat-status">Folded</div></div>
-                <div id="seat-CO" class="player-seat seat-5">CO<div class="seat-status">Folded</div></div>
-                <div id="seat-BTN" class="player-seat seat-6">BTN<div class="seat-status">Folded</div></div>
-                <div id="seat-
+        .btn-allin { background-color: #b91c1c;
