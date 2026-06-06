@@ -23,6 +23,21 @@
             overflow-x: hidden;
         }
 
+        h1 {
+            color: #4ade80;
+            margin-bottom: 5px;
+            font-size: 1.6rem;
+            text-align: center;
+        }
+
+        p.subtitle {
+            color: #94a3b8;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
         /* Layout em Duas Colunas */
         .app-layout {
             display: flex;
@@ -132,14 +147,14 @@
 
         /* Coordenadas x/y para simular a mesa oval 9-Max */
         .seat-0 { top: -5px; left: 43%; }      /* UTG */
-        .seat-1 { top: 30px; right: 10px; }    /* UTG+1 */
+        .seat-1 { top: 30px; right: 10px; }    /* UTG1 */
         .seat-2 { top: 110px; right: -15px; }  /* MP */
         .seat-3 { bottom: 30px; right: 10px; } /* HJ */
         .seat-4 { bottom: -5px; left: 55%; }   /* CO */
         .seat-5 { bottom: -5px; left: 30%; }   /* BTN */
         .seat-6 { bottom: 30px; left: 10px; }  /* SB */
         .seat-7 { top: 110px; left: -15px; }   /* BB */
-        .seat-8 { top: 30px; left: 10px; }     /* UTG+2 */
+        .seat-8 { top: 30px; left: 10px; }     /* UTG2 */
 
         /* BOTÃO DO DEALER (D) */
         .dealer-button {
@@ -190,9 +205,13 @@
             max-width: 110px;
         }
         .btn-raise { background-color: #f97316; }
+        .btn-raise:hover { background-color: #ea580c; }
         .btn-allin { background-color: #b91c1c; }
+        .btn-allin:hover { background-color: #991b1b; }
         .btn-limp { background-color: #3b82f6; }
+        .btn-limp:hover { background-color: #2563eb; }
         .btn-fold { background-color: #4b5563; }
+        .btn-fold:hover { background-color: #374151; }
 
         .btn-utility {
             background-color: #0284c7;
@@ -206,6 +225,7 @@
             font-weight: bold;
             width: 100%;
         }
+        .btn-utility:hover { background-color: #0369a1; }
 
         .scoreboard {
             display: flex;
@@ -321,10 +341,7 @@
                 <div class="felt-center">
                     <div class="table-meta-info" id="tableStackMeta">--</div>
                     <!-- Cartas Visuais do Hero -->
-                    <div class="cards-delivery" id="visualCardsContainer">
-                        <div class="poker-card card-black"><div>A</div><div class="card-suit-bottom">♠</div></div>
-                        <div class="poker-card card-red"><div>K</div><div class="card-suit-bottom">♦</div></div>
-                    </div>
+                    <div class="cards-delivery" id="visualCardsContainer"></div>
                 </div>
 
                 <!-- Assentos dos Jogadores Configurados Dinamicamente -->
@@ -417,18 +434,14 @@
         ];
 
         const stacksList = ["100BB", "90BB", "80BB", "70BB", "60BB", "50BB", "40BB", "30BB", "20BB", "10BB"];
-        
-        // Ordem cronológica das posições em uma mesa 9-Max
         const positionsChronological = ["UTG", "UTG1", "UTG2", "MP", "HJ", "CO", "BTN", "SB", "BB"];
 
-        // Elementos HTML mapeados para posicionar o Dealer Button e os nomes na mesa
         const seatIdsMapping = {
             "UTG": "seat-UTG", "UTG1": "seat-UTG1", "UTG2": "seat-UTG2",
             "MP": "seat-MP", "HJ": "seat-HJ", "CO": "seat-CO",
             "BTN": "seat-BTN", "SB": "seat-SB", "BB": "seat-BB"
         };
 
-        // Coordenadas CSS para mover o token do Dealer Button (D) para perto do BTN correspondente
         const dealerTokenCoordinates = {
             "UTG": { top: "30px", left: "43%" },
             "UTG1": { top: "65px", right: "40px" },
@@ -441,14 +454,13 @@
             "BB": { top: "110px", left: "20px" }
         };
 
-        // Replicante compacto do Banco de Dados GTO de RFI
         const gtoDatabase = {
             "100BB": {
                 "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
-                "UTG1": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise" } },
-                "UTG2": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise" } },
+                "UTG1": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","AKs":"raise","AQs":"raise","AKo":"raise" } },
+                "UTG2": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","AKs":"raise","AQs":"raise" } },
                 "MP": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise" } },
-                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","AKs":"raise" } },
                 "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise","76s":"raise" } },
                 "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","A2s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","A8o":"raise","A7o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","K8s":"raise","K7s":"raise","K6s":"raise","KJo":"raise","KTo":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise","76s":"raise","65s":"raise","54s":"raise" } },
                 "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise" } },
@@ -478,7 +490,6 @@
             }
         };
 
-        // REPLICANTE AUTOMÁTICO PARA AS DEMAIS FAIXAS DE STACK INTERMEDIÁRIAS (Evita que o código quebre)
         const intermediaryFaixas = ["90BB", "80BB", "70BB", "50BB", "40BB", "30BB", "20BB"];
         intermediaryFaixas.forEach(f => {
             gtoDatabase[f] = (parseInt(f) >= 40) ? gtoDatabase["60BB"] : gtoDatabase["10BB"];
@@ -515,9 +526,10 @@
             for (let i = 0; i < 13; i++) {
                 for (let j = 0; j < 13; j++) {
                     let handName = (i < j) ? cardValues[i] + cardValues[j] + "s" : (i > j) ? cardValues[j] + cardValues[i] + "o" : cardValues[i] + cardValues[j];
-                    const cell = document.getElementById::`grid-${handName}`);
+                    const cell = document.getElementById(`grid-${handName}`); // CORRIGIDO O ERRO DE DOIS PONTOS AQUI
                     const action = positionData.hands[handName];
 
+                    if (!cell) continue;
                     cell.className = "cell";
                     if (handName === currentHand) cell.classList.add('cell-active-hand');
 
@@ -545,7 +557,6 @@
             panel.classList.remove('active');
         }
 
-        // NOVO FORMATO DE ILUSTRAÇÃO GRÁFICA DE NAIPES DAS CARTAS (HERO)
         function drawVisualCards(handStr) {
             const container = document.getElementById('visualCardsContainer');
             container.innerHTML = '';
@@ -555,19 +566,26 @@
             const isSuited = handStr.endsWith('s');
             const isOffsuit = handStr.endsWith('o');
 
-            // Define os naipes artificiais para ilustrar na mesa
-            let suit1 = "♠"; let suit2 = "♣"; // Padrão: Pretas (Spades/Clubs)
-            let colorClass1 = "card-black"; let colorClass2 = "card-black";
+            // Sorteador dinâmico de naipes secundários para dar realismo matemático
+            const redSuits = ["♥", "♦"];
+            const blackSuits = ["♠", "♣"];
+            
+            let suit1, suit2, colorClass1, colorClass2;
 
             if (isSuited) {
-                suit1 = "♥"; suit2 = "♥"; // Naipadas ganham copas vermelhas
+                // Mesmo naipe (ex: ambas copas ou ambas ouros)
+                suit1 = redSuits[Math.floor(Math.random() * redSuits.length)];
+                suit2 = suit1;
                 colorClass1 = "card-red"; colorClass2 = "card-red";
             } else if (isOffsuit) {
-                suit1 = "♦"; suit2 = "♣"; // Descoladas ganham uma vermelha e uma preta
+                // Naipes de cores diferentes
+                suit1 = redSuits[Math.floor(Math.random() * redSuits.length)];
+                suit2 = blackSuits[Math.floor(Math.random() * blackSuits.length)];
                 colorClass1 = "card-red"; colorClass2 = "card-black";
             } else {
-                // Pares
-                suit1 = "♠"; suit2 = "♦";
+                // Pares (Um naipe preto e um vermelho)
+                suit1 = blackSuits[Math.floor(Math.random() * blackSuits.length)];
+                suit2 = redSuits[Math.floor(Math.random() * redSuits.length)];
                 colorClass1 = "card-black"; colorClass2 = "card-red";
             }
 
@@ -577,35 +595,29 @@
             `;
         }
 
-        // ATUALIZAÇÃO REVOLUCIONÁRIA DA MESA: Posições, folds prévios e assento iluminado
         function refreshPokerTableGraph() {
-            // Sorteia uma posição para o botão do Dealer que não seja o BB nem o SB
             const dealerMockPositions = ["UTG2", "MP", "HJ", "CO", "BTN"];
             const currentDealerButtonSeat = dealerMockPositions[Math.floor(Math.random() * dealerMockPositions.length)];
 
-            // Move geometricamente o token "D" na mesa
             const token = document.getElementById('dealerButtonToken');
             token.style.top = dealerTokenCoordinates[currentDealerButtonSeat].top;
             token.style.left = dealerTokenCoordinates[currentDealerButtonSeat].left;
             token.style.right = dealerTokenCoordinates[currentDealerButtonSeat].right || "auto";
 
-            // Descobre em que ordem cronológica a ação está andando na mesa
             let heroIndex = positionsChronological.indexOf(currentPosition);
 
-            // Varre todos os 9 assentos da mesa oval para atualizar quem já deu fold
             positionsChronological.forEach((pos, idx) => {
                 const seatElement = document.getElementById(seatIdsMapping[pos]);
+                if (!seatElement) return;
+                
                 seatElement.className = "player-seat " + seatElement.className.split(' ').filter(c => c.startsWith('seat-')).join(' ');
 
                 if (pos === currentPosition) {
-                    // É VOCÊ! Ilumina o assento em verde neon
                     seatElement.classList.add('hero-active-seat');
                     seatElement.innerHTML = `${pos}<div class="seat-status">Sua Vez</div>`;
                 } else if (idx < heroIndex) {
-                    // Jogadores que falaram antes de você deram Fold (Mesa limpa para RFI)
                     seatElement.innerHTML = `${pos}<div class="seat-status" style="color:#ef4444;">Folded</div>`;
                 } else {
-                    // Jogadores aguardando a ação nas blinds ou atrás de você
                     seatElement.innerHTML = `${pos}<div class="seat-status">Aguardando</div>`;
                 }
             });
@@ -620,17 +632,14 @@
             document.getElementById('currentHandNum').innerText = totalHandsPlayed + 1;
 
             currentStack = stacksList[Math.floor(Math.random() * stacksList.length)];
-            // Sorteia as posições principais de ataque pré-flop (Exclui BB pois não dá RFI)
             const attackPositions = ["UTG", "MP", "HJ", "CO", "BTN", "SB"];
             currentPosition = attackPositions[Math.floor(Math.random() * attackPositions.length)];
             currentHand = allPossibleHands[Math.floor(Math.random() * allPossibleHands.length)];
 
-            // Renderiza os gráficos da nova mesa
             document.getElementById('tableStackMeta').innerText = `${currentStack} • Blinds 9-Max`;
             drawVisualCards(currentHand);
             refreshPokerTableGraph();
 
-            // Esconde ou mostra botões baseados no stack
             if (currentStack === "10BB" || currentStack === "20BB") {
                 document.getElementById('btnRaise').style.display = "none";
                 document.getElementById('btnAllin').style.display = "inline-block";
@@ -660,7 +669,7 @@
             if (userAction === correctGtoAction) {
                 correctAnswers++;
                 feedbackBox.className = "feedback-box feedback-correct";
-                feedbackBox.innerText = `Acertou! Com ${currentHand} no ${currentPosition} (${currentStack}), a linha correta é ${correctGtoAction.toUpperCase()}.`;
+                feedbackBox.innerText = `Acertou! Com ${currentHand} no ${currentPosition} (${currentStack}), o correto é ${correctGtoAction.toUpperCase()}.`;
             } else {
                 feedbackBox.className = "feedback-box feedback-wrong";
                 feedbackBox.innerText = `Errou! Você deu ${userAction.toUpperCase()}. O GTO Wizard indica ${correctGtoAction.toUpperCase()} com ${currentHand} no ${currentPosition} (${currentStack}).`;
