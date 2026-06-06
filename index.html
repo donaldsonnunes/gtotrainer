@@ -155,7 +155,7 @@
         .seat-7 { top: 110px; left: -15px; }   /* BB */
         .seat-8 { top: 30px; left: 10px; }     /* UTG2 */
 
-        /* BOTÃO DO DEALER AJUSTADO NA BORDA INTERNA */
+        /* BOTÃO DO DEALER AJUSTADO E CORRIGIDO */
         .dealer-button {
             position: absolute;
             width: 22px;
@@ -171,7 +171,6 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
             border: 2px solid #000000;
             z-index: 10;
-            transition: all 0.3s ease-in-out;
         }
 
         /* CONTROLES E PLACAR */
@@ -431,7 +430,6 @@
             "BTN": "seat-BTN", "SB": "seat-SB", "BB": "seat-BB"
         };
 
-        // COORDENADAS REVISADAS DO BOTÃO DE DEALER (Ficam encostados no assento do BTN da rodada)
         const dealerTokenCoordinates = {
             "UTG": { top: "30px", left: "43%" },
             "UTG1": { top: "65px", right: "40px" },
@@ -444,7 +442,6 @@
             "BB": { top: "110px", left: "20px" }
         };
 
-        // BANCO DE DADOS CORE EXPANDIDO (Com AKo, AQs e pares baixos adicionados explicitamente para evitar bugs de falsos folds)
         const gtoDatabase = {
             "100BB": {
                 "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
@@ -476,4 +473,231 @@
                 "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","AKs":"raise","AQs":"raise","AKo":"raise","AQo":"raise" } },
                 "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise" } },
                 "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise" } },
-                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","AKs
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","KQs":"raise","KJs":"raise" } },
+                "BB": { "hands": {} }
+            }
+        };
+
+        const intermediaryFaixas = ["90BB", "80BB", "70BB", "50BB", "40BB", "30BB", "20BB"];
+        intermediaryFaixas.forEach(f => {
+            gtoDatabase[f] = (parseInt(f) >= 40) ? gtoDatabase["60BB"] : gtoDatabase["10BB"];
+        });
+
+        let totalHandsPlayed = 0;
+        let correctAnswers = 0;
+        let currentStack = "";
+        let currentPosition = "";
+        let currentHand = "";
+        let correctGtoAction = "";
+        let isPanelVisible = false;
+
+        function initMatrixGrid() {
+            const matrixElement = document.getElementById('pokerMatrix');
+            matrixElement.innerHTML = ''; 
+            for (let i = 0; i < 13; i++) {
+                for (let j = 0; j < 13; j++) {
+                    let handName = (i < j) ? cardValues[i] + cardValues[j] + "s" : (i > j) ? cardValues[j] + cardValues[i] + "o" : cardValues[i] + cardValues[j];
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.innerText = handName;
+                    cell.setAttribute('id', `grid-${handName}`);
+                    matrixElement.appendChild(cell);
+                }
+            }
+        }
+
+        function renderMatrixColors() {
+            if (!isPanelVisible) return; 
+            document.getElementById('matrixPanelTitle').innerText = `${currentPosition} (${currentStack})`;
+            const positionData = gtoDatabase[currentStack][currentPosition];
+
+            for (let i = 0; i < 13; i++) {
+                for (let j = 0; j < 13; j++) {
+                    let handName = (i < j) ? cardValues[i] + cardValues[j] + "s" : (i > j) ? cardValues[j] + cardValues[i] + "o" : cardValues[i] + cardValues[j];
+                    const cell = document.getElementById('grid-' + handName); // CORRIGIDO PARA PONTO NORMAL (.) AQUI
+                    if (!cell) continue;
+                    
+                    const action = positionData.hands[handName];
+                    cell.className = "cell";
+                    if (handName === currentHand) cell.classList.add('cell-active-hand');
+
+                    if (action === "raise") {
+                        cell.style.backgroundColor = (currentStack === "10BB" || currentStack === "20BB") ? "#b91c1c" : "#f97316"; 
+                    } else if (action === "limp") {
+                        cell.style.backgroundColor = "#3b82f6"; 
+                    } else {
+                        cell.style.backgroundColor = "#334155"; 
+                    }
+                }
+            }
+        }
+
+        function openMatrixPanel() {
+            const panel = document.getElementById('matrixPanel');
+            isPanelVisible = true;
+            panel.classList.add('active');
+            renderMatrixColors();
+        }
+
+        function closeMatrixPanel() {
+            const panel = document.getElementById('matrixPanel');
+            isPanelVisible = false;
+            panel.classList.remove('active');
+        }
+
+        function drawVisualCards(handStr) {
+            const container = document.getElementById('visualCardsContainer');
+            container.innerHTML = '';
+
+            const c1 = handStr[0];
+            const c2 = handStr[1];
+            const isSuited = handStr.endsWith('s');
+            const isOffsuit = handStr.endsWith('o');
+
+            const redSuits = ["♥", "♦"];
+            const blackSuits = ["♠", "♣"];
+            
+            let suit1, suit2, colorClass1, colorClass2;
+
+            if (isSuited) {
+                suit1 = redSuits[Math.floor(Math.random() * redSuits.length)];
+                suit2 = suit1;
+                colorClass1 = "card-red"; colorClass2 = "card-red";
+            } else if (isOffsuit) {
+                suit1 = redSuits[Math.floor(Math.random() * redSuits.length)];
+                suit2 = blackSuits[Math.floor(Math.random() * blackSuits.length)];
+                colorClass1 = "card-red"; colorClass2 = "card-black";
+            } else {
+                suit1 = blackSuits[Math.floor(Math.random() * blackSuits.length)];
+                suit2 = redSuits[Math.floor(Math.random() * redSuits.length)];
+                colorClass1 = "card-black"; colorClass2 = "card-red";
+            }
+
+            container.innerHTML = `
+                <div class="poker-card ${colorClass1}"><div>${c1}</div><div class="card-suit-bottom">${suit1}</div></div>
+                <div class="poker-card ${colorClass2}"><div>${c2}</div><div class="card-suit-bottom">${suit2}</div></div>
+            `;
+        }
+
+        // CORREÇÃO DEFINITIVA DO BOTÃO D FIXO NO LUGAR REAL (MESA CONCEITUAL)
+        function refreshPokerTableGraph() {
+            let dealerPositionName = "BTN"; // O Botão D mora permanentemente no assento do Botão (BTN)
+
+            const token = document.getElementById('dealerButtonToken');
+            token.style.top = dealerTokenCoordinates[dealerPositionName].top;
+            token.style.left = dealerTokenCoordinates[dealerPositionName].left;
+            token.style.right = dealerTokenCoordinates[dealerPositionName].right || "auto";
+
+            let heroIndex = positionsChronological.indexOf(currentPosition);
+
+            positionsChronological.forEach((pos, idx) => {
+                const seatElement = document.getElementById(seatIdsMapping[pos]);
+                if (!seatElement) return;
+                
+                seatElement.className = "player-seat " + seatElement.className.split(' ').filter(c => c.startsWith('seat-')).join(' ');
+
+                if (pos === currentPosition) {
+                    seatElement.classList.add('hero-active-seat');
+                    seatElement.innerHTML = `${pos}<div class="seat-status">Sua Vez</div>`;
+                } else if (idx < heroIndex) {
+                    seatElement.innerHTML = `${pos}<div class="seat-status" style="color:#ef4444;">Folded</div>`;
+                } else if (pos === "SB" || pos === "BB") {
+                    seatElement.innerHTML = `${pos}<div class="seat-status" style="color:#60a5fa;">Blinds</div>`;
+                } else {
+                    seatElement.innerHTML = `${pos}<div class="seat-status">Aguardando</div>`;
+                }
+            });
+        }
+
+        function generateNewScenario() {
+            if (totalHandsPlayed >= 100) {
+                endGame();
+                return;
+            }
+
+            document.getElementById('currentHandNum').innerText = totalHandsPlayed + 1;
+
+            currentStack = stacksList[Math.floor(Math.random() * stacksList.length)];
+            const attackPositions = ["UTG", "UTG1", "UTG2", "MP", "HJ", "CO", "BTN", "SB"];
+            currentPosition = attackPositions[Math.floor(Math.random() * attackPositions.length)];
+            currentHand = allPossibleHands[Math.floor(Math.random() * allPossibleHands.length)];
+
+            document.getElementById('tableStackMeta').innerText = `${currentStack} • Blinds 9-Max`;
+            drawVisualCards(currentHand);
+            refreshPokerTableGraph();
+
+            if (currentStack === "10BB" || currentStack === "20BB") {
+                document.getElementById('btnRaise').style.display = "none";
+                document.getElementById('btnAllin').style.display = "inline-block";
+                document.getElementById('btnLimp').style.display = "none";
+            } else {
+                document.getElementById('btnRaise').style.display = "inline-block";
+                document.getElementById('btnAllin').style.display = "none";
+                document.getElementById('btnLimp').style.display = (currentPosition === "SB") ? "inline-block" : "none";
+            }
+
+            const databaseTarget = gtoDatabase[currentStack][currentPosition].hands[currentHand];
+            let basicAction = databaseTarget ? databaseTarget : "fold";
+
+            if (basicAction === "raise" && (currentStack === "10BB" || currentStack === "20BB")) {
+                correctGtoAction = "allin";
+            } else {
+                correctGtoAction = basicAction;
+            }
+
+            renderMatrixColors();
+        }
+
+        function submitAction(userAction) {
+            const feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.style.display = "block";
+
+            if (userAction === correctGtoAction) {
+                correctAnswers++;
+                feedbackBox.className = "feedback-box feedback-correct";
+                feedbackBox.innerText = `Acertou! Com ${currentHand} no ${currentPosition} (${currentStack}), o correto é ${correctGtoAction.toUpperCase()}.`;
+            } else {
+                feedbackBox.className = "feedback-box feedback-wrong";
+                feedbackBox.innerText = `Errou! Você deu ${userAction.toUpperCase()}. O GTO Wizard indica ${correctGtoAction.toUpperCase()} com ${currentHand} no ${currentPosition} (${currentStack}).`;
+            }
+
+            totalHandsPlayed++;
+            const accuracy = Math.round((correctAnswers / totalHandsPlayed) * 100);
+            document.getElementById('correctCount').innerText = correctAnswers;
+            document.getElementById('accuracyPercent').innerText = `${accuracy}%`;
+
+            generateNewScenario();
+        }
+
+        function endGame() {
+            document.getElementById('gameArea').style.display = "none";
+            document.getElementById('matrixPanel').classList.remove('active');
+            const finalContainer = document.getElementById('summaryArea');
+            finalContainer.style.display = "block";
+
+            const accuracy = Math.round((correctAnswers / 100) * 100);
+            document.getElementById('finalAccuracy').innerText = `${accuracy}%`;
+
+            const evalText = document.getElementById('evaluationText');
+            if (accuracy >= 90) evalText.innerText = "Nível Profissional! Sua percepção de ranges de RFI e Shoves em mesa oval está totalmente polida.";
+            else if (accuracy >= 75) evalText.innerText = "Bom! Você compreende as posições da mesa, mas tome cuidado com ranges marginais fora de posição.";
+            else evalText.innerText = "Abaixo da média. Você está queimando fichas abrindo cartas fracas de UTG ou foldando shoves lucrativos de 10BB.";
+        }
+
+        function restartTrainer() {
+            totalHandsPlayed = 0;
+            correctAnswers = 0;
+            isPanelVisible = false;
+            document.getElementById('correctCount').innerText = "0";
+            document.getElementById('accuracyPercent').innerText = "0%";
+            document.getElementById('feedbackBox').style.display = "none";
+            document.getElementById('summaryArea').style.display = "none";
+            document.getElementById('gameArea').style.display = "flex";
+            generateNewScenario();
+        }
+
+        initMatrixGrid();
+        generateNewScenario();
+    </script>
+</body>
+</html>
