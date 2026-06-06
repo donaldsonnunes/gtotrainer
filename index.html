@@ -206,4 +206,200 @@
         }
         .btn-raise { background-color: #f97316; }
         .btn-raise:hover { background-color: #ea580c; }
-        .btn
+        .btn-allin { background-color: #b91c1c; }
+        .btn-allin:hover { background-color: #991b1b; }
+        .btn-limp { background-color: #3b82f6; }
+        .btn-limp:hover { background-color: #2563eb; }
+        .btn-fold { background-color: #4b5563; }
+        .btn-fold:hover { background-color: #374151; }
+
+        .btn-utility {
+            background-color: #0284c7;
+            color: white;
+            padding: 12px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        .scoreboard {
+            display: flex;
+            justify-content: space-between;
+            background-color: #0f172a;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .score-highlight { color: #4ade80; font-weight: bold; }
+
+        .feedback-box {
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-weight: bold;
+            display: none;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            text-align: left;
+        }
+        .feedback-correct { background-color: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid #4ade80; }
+        .feedback-wrong { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
+
+        /* PAINEL DE RANGE DRAWER SLIDE */
+        .matrix-panel {
+            background-color: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .matrix-title { font-size: 1rem; color: #4ade80; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; }
+        
+        .matrix {
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            gap: 2px;
+            width: min(90vw, 360px);
+            height: min(90vw, 360px);
+        }
+
+        .cell {
+            background-color: #334155;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(0.55rem, 2.2vw, 0.65rem);
+            font-weight: bold;
+            color: #ffffff;
+            user-select: none;
+        }
+        .cell-active-hand { outline: 2px solid #fbbf24; box-shadow: 0 0 10px #fbbf24; z-index: 10; }
+
+        .btn-close-matrix {
+            display: none;
+            background-color: #ef4444;
+            color: white;
+            padding: 12px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .app-layout { flex-direction: column; align-items: center; }
+            .matrix-panel {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 100vw;
+                height: 100vh;
+                z-index: 999;
+                border-radius: 0;
+                justify-content: center;
+                transition: right 0.25s ease-in-out;
+            }
+            .matrix-panel.active { display: flex !important; right: 0; }
+            .btn-close-matrix { display: block; }
+        }
+
+        @media (min-width: 769px) {
+            .matrix-panel.active { display: flex !important; }
+        }
+
+        .summary-container { text-align: center; padding: 30px; background-color: #1e293b; border-radius: 12px; display: none; max-width: 500px; }
+    </style>
+</head>
+<body>
+
+    <h1>MTT GTO Quiz Trainer</h1>
+    <p class="subtitle">Mesa 9-Max Simulada de Torneio</p>
+
+    <div class="app-layout">
+        
+        <div class="main-game-container" id="gameArea">
+            
+            <div class="poker-table-area">
+                
+                <div class="felt-center">
+                    <div class="table-meta-info" id="tableStackMeta">--</div>
+                    <div class="cards-delivery" id="visualCardsContainer"></div>
+                </div>
+
+                <div id="seat-UTG" class="player-seat seat-0">UTG<div class="seat-status">Folded</div></div>
+                <div id="seat-UTG1" class="player-seat seat-1">UTG+1<div class="seat-status">Folded</div></div>
+                <div id="seat-UTG2" class="player-seat seat-2">UTG+2<div class="seat-status">Folded</div></div>
+                <div id="seat-MP" class="player-seat seat-3">MP<div class="seat-status">Folded</div></div>
+                <div id="seat-HJ" class="player-seat seat-4">HJ<div class="seat-status">Folded</div></div>
+                <div id="seat-CO" class="player-seat seat-5">CO<div class="seat-status">Folded</div></div>
+                <div id="seat-BTN" class="player-seat seat-6">BTN<div class="seat-status">Folded</div></div>
+                <div id="seat-SB" class="player-seat seat-7">SB<div class="seat-status">Blinds</div></div>
+                <div id="seat-BB" class="player-seat seat-8">BB<div class="seat-status">Blinds</div></div>
+
+                <div id="dealerButtonToken" class="dealer-button">D</div>
+            </div>
+
+            <div class="action-block">
+                <div class="action-buttons">
+                    <button id="btnRaise" class="btn btn-raise" onclick="submitAction('raise')">Raise</button>
+                    <button id="btnAllin" class="btn btn-allin" onclick="submitAction('allin')">All-In</button>
+                    <button id="btnLimp" class="btn btn-limp" onclick="submitAction('limp')">Limp</button>
+                    <button id="btnFold" class="btn btn-fold" onclick="submitAction('fold')">Fold</button>
+                </div>
+
+                <button class="btn-utility" onclick="openMatrixPanel()">Ver Matriz GTO deste Cenário</button>
+
+                <div class="scoreboard">
+                    <div>Mão: <span id="currentHandNum" class="score-highlight">1</span> / 100</div>
+                    <div>Acertos: <span id="correctCount" class="score-highlight">0</span></div>
+                    <div>Aproveitamento: <span id="accuracyPercent" class="score-highlight">0%</span></div>
+                </div>
+
+                <div class="feedback-box" id="feedbackBox">Feedback</div>
+            </div>
+
+        </div>
+
+        <div class="matrix-panel" id="matrixPanel">
+            <div class="matrix-title" id="matrixPanelTitle">Range de Abertura</div>
+            <div class="matrix" id="pokerMatrix"></div>
+            <button class="btn-close-matrix" onclick="closeMatrixPanel()">← Voltar para a Mesa</button>
+        </div>
+
+    </div>
+
+    <div class="summary-container" id="summaryArea">
+        <h2>Treino Concluído!</h2>
+        <p>Seu aproveitamento final nas 100 mãos simuladas foi de:</p>
+        <div style="font-size: 3.5rem; font-weight: 900; color: #4ade80; margin: 15px 0;" id="finalAccuracy">0%</div>
+        <p id="evaluationText" style="color: #94a3b8; margin-bottom: 25px;"></p>
+        <button style="background-color: #10b981; padding: 12px 40px; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="restartTrainer()">Treinar Novamente</button>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
+        }
+    </script>
+
+    <script>
+        const cardValues = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+        const allPossibleHands = [
+            "AA","KK","QQ","JJ","TT","99","88","77","66","55","44","33","22",
+            "AKs","AQs","AJs","ATs","A9s","A8s","A7s","A6s","A5s","A4s","A3s","A2s",
+            "AKo","AQo","AJo","ATo","A9o","A8o","A7o","A6o","A5o","A4o","A3o","A2o",
+            "KQs","KJs","KTs","K9s","K8s","K7s","K6s","K5s","K4s","K3s","K2s",
+            "KJo","KTo","K9o","K8o","K7o","K6o","K5o","K4o","K3o","K2o",
+            "QJs","QTs","Q9s","Q8s","Q7s","Q
