@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTT GTO Quiz Trainer - 9-Max Clockwise</title>
+    <title>MTT GTO Quiz Trainer - Async JSON Version</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-web-app-capable" content="yes">
 
     <style>
         body {
@@ -23,318 +23,101 @@
             overflow-x: hidden;
         }
 
-        h1 {
-            color: #4ade80;
-            margin-bottom: 5px;
-            font-size: 1.6rem;
-            text-align: center;
-        }
+        h1 { color: #4ade80; margin-bottom: 5px; font-size: 1.6rem; text-align: center; }
+        p.subtitle { color: #94a3b8; margin-top: 0; margin-bottom: 20px; font-size: 0.9rem; text-align: center; }
 
-        p.subtitle {
-            color: #94a3b8;
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-            text-align: center;
-        }
+        .app-layout { display: flex; gap: 20px; max-width: 1100px; width: 100%; justify-content: center; align-items: flex-start; }
+        .main-game-container { flex: 1; max-width: 600px; width: 100%; display: flex; flex-direction: column; align-items: center; }
 
-        .app-layout {
-            display: flex;
-            gap: 20px;
-            max-width: 1100px;
-            width: 100%;
-            justify-content: center;
-            align-items: flex-start;
-        }
-
-        .main-game-container {
-            flex: 1;
-            max-width: 600px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* MESA DE POKER OVAL */
+        /* MESA OVAL */
         .poker-table-area {
-            width: 100%;
-            height: 280px;
-            background-color: #0b1320;
-            border-radius: 140px;
-            border: 12px solid #334155;
-            box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 10px 25px rgba(0,0,0,0.5);
-            position: relative;
-            margin: 20px 0;
-            box-sizing: border-box;
+            width: 100%; height: 280px; background-color: #0b1320; border-radius: 140px; border: 12px solid #334155;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 10px 25px rgba(0,0,0,0.5); position: relative; margin: 20px 0; box-sizing: border-box;
         }
-
         .felt-center {
-            position: absolute;
-            top: 20%;
-            left: 20%;
-            width: 60%;
-            height: 60%;
-            border: 2px dashed rgba(255,255,255,0.1);
-            border-radius: 100px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1;
+            position: absolute; top: 20%; left: 20%; width: 60%; height: 60%;
+            border: 2px dashed rgba(255,255,255,0.1); border-radius: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1;
         }
-
-        .table-meta-info {
-            font-size: 0.85rem;
-            color: #94a3b8;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-        }
-
-        .cards-delivery {
-            display: flex;
-            gap: 8px;
-        }
-
+        .table-meta-info { font-size: 0.85rem; color: #94a3b8; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .cards-delivery { display: flex; gap: 8px; }
         .poker-card {
-            width: 50px;
-            height: 72px;
-            background-color: #ffffff;
-            border-radius: 6px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 5px;
-            box-sizing: border-box;
-            font-weight: 900;
-            font-size: 1.2rem;
-            user-select: none;
+            width: 50px; height: 72px; background-color: #ffffff; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            display: flex; flex-direction: column; justify-content: space-between; padding: 5px; box-sizing: border-box; font-weight: 900; font-size: 1.2rem; user-select: none;
         }
-        
         .card-red { color: #dc2626; }
         .card-black { color: #1e293b; }
         .card-suit-bottom { align-self: flex-end; font-size: 1rem; }
 
-        /* ASSENTOS JOGADORES */
+        /* ASSENTOS */
         .player-seat {
-            position: absolute;
-            background-color: #1e293b;
-            border: 2px solid #475569;
-            border-radius: 8px;
-            padding: 6px 10px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            text-align: center;
-            width: 78px;
-            box-sizing: border-box;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            transition: all 0.3s;
-            z-index: 2;
+            position: absolute; background-color: #1e293b; border: 2px solid #475569; border-radius: 8px;
+            padding: 6px 10px; font-size: 0.75rem; font-weight: bold; text-align: center; width: 78px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s; z-index: 2;
         }
-
-        .hero-active-seat {
-            border-color: #4ade80 !important;
-            background-color: #064e3b !important;
-            box-shadow: 0 0 12px #4ade80;
-        }
-
+        .hero-active-seat { border-color: #4ade80 !important; background-color: #064e3b !important; box-shadow: 0 0 12px #4ade80; }
         .seat-status { color: #94a3b8; font-size: 0.65rem; margin-top: 2px; }
         .hero-active-seat .seat-status { color: #4ade80; }
 
-        /* COORDENADAS DO RELÓGIO HORÁRIO */
-        .seat-0 { top: 30px; left: 15px; }     /* UTG */
-        .seat-1 { top: -5px; left: 43%; }      /* UTG+1 */
-        .seat-2 { top: 30px; right: 15px; }    /* UTG+2 */
-        .seat-3 { top: 110px; right: -15px; }  /* MP */
-        .seat-4 { bottom: 30px; right: 15px; } /* HJ */
-        .seat-5 { bottom: -5px; left: 55%; }   /* CO */
-        .seat-6 { bottom: -5px; left: 30%; }   /* BTN */
-        .seat-7 { bottom: 30px; left: 15px; }  /* SB */
-        .seat-8 { top: 110px; left: -15px; }   /* BB */
+        .seat-0 { top: 30px; left: 15px; }     
+        .seat-1 { top: -5px; left: 43%; }      
+        .seat-2 { top: 30px; right: 15px; }    
+        .seat-3 { top: 110px; right: -15px; }  
+        .seat-4 { bottom: 30px; right: 15px; } 
+        .seat-5 { bottom: -5px; left: 55%; }   
+        .seat-6 { bottom: -5px; left: 30%; }   
+        .seat-7 { bottom: 30px; left: 15px; }  
+        .seat-8 { top: 110px; left: -15px; }   
 
-        /* BOTÃO DO DEALER (D) */
         .dealer-button {
-            position: absolute;
-            width: 22px;
-            height: 22px;
-            background-color: #ffffff;
-            color: #000000;
-            border-radius: 50%;
-            font-size: 0.75rem;
-            font-weight: 900;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-            border: 2px solid #000000;
-            z-index: 10;
+            position: absolute; width: 22px; height: 22px; background-color: #ffffff; color: #000000;
+            border-radius: 50%; font-size: 0.75rem; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); border: 2px solid #000000; z-index: 10;
         }
 
-        /* CONTROLES E PLACAR */
-        .action-block {
-            background-color: #1e293b;
-            padding: 15px;
-            border-radius: 12px;
-            width: 100%;
-            box-sizing: border-box;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 15px;
-            height: 46px;
-            align-items: center;
-        }
-
-        .btn {
-            padding: 12px;
-            font-size: 1rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            color: white;
-            flex: 1;
-            max-width: 110px;
-        }
+        /* CONTROLES */
+        .action-block { background-color: #1e293b; padding: 15px; border-radius: 12px; width: 100%; box-sizing: border-box; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .action-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; height: 46px; align-items: center; }
+        .btn { padding: 12px; font-size: 1rem; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; color: white; flex: 1; max-width: 110px; }
         .btn-raise { background-color: #f97316; }
-        .btn-raise:hover { background-color: #ea580c; }
         .btn-allin { background-color: #b91c1c; }
-        .btn-allin:hover { background-color: #991b1b; }
         .btn-limp { background-color: #3b82f6; }
-        .btn-limp:hover { background-color: #2563eb; }
         .btn-fold { background-color: #4b5563; }
-        .btn-fold:hover { background-color: #374151; }
 
-        .btn-utility {
-            background-color: #0284c7;
-            color: white;
-            padding: 12px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-bottom: 15px;
-            font-weight: bold;
-            width: 100%;
-        }
-
-        .scoreboard {
-            display: flex;
-            justify-content: space-between;
-            background-color: #0f172a;
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-        }
+        .btn-utility { background-color: #0284c7; color: white; padding: 12px; font-size: 1rem; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 15px; font-weight: bold; width: 100%; }
+        .scoreboard { display: flex; justify-content: space-between; background-color: #0f172a; padding: 12px; border-radius: 8px; font-size: 0.9rem; }
         .score-highlight { color: #4ade80; font-weight: bold; }
 
-        .feedback-box {
-            padding: 12px;
-            border-radius: 6px;
-            margin-top: 15px;
-            font-weight: bold;
-            display: none;
-            font-size: 0.9rem;
-            line-height: 1.4;
-            text-align: left;
-        }
+        .feedback-box { padding: 12px; border-radius: 6px; margin-top: 15px; font-weight: bold; display: none; font-size: 0.9rem; line-height: 1.4; text-align: left; }
         .feedback-correct { background-color: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid #4ade80; }
         .feedback-wrong { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
 
-        /* PAINEL DE RANGE DRAWER SLIDE */
-        .matrix-panel {
-            background-color: #1e293b;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            box-sizing: border-box;
-        }
-
+        /* MATRIZ LATERAL */
+        .matrix-panel { background-color: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: none; flex-direction: column; align-items: center; box-sizing: border-box; }
         .matrix-title { font-size: 1rem; color: #4ade80; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; }
-        
-        .matrix {
-            display: grid;
-            grid-template-columns: repeat(13, 1fr);
-            gap: 2px;
-            width: min(90vw, 360px);
-            height: min(90vw, 360px);
-        }
-
-        .cell {
-            background-color: #334155;
-            border-radius: 2px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: clamp(0.55rem, 2.2vw, 0.65rem);
-            font-weight: bold;
-            color: #ffffff;
-            user-select: none;
-        }
+        .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; width: min(90vw, 360px); height: min(90vw, 360px); }
+        .cell { background-color: #334155; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: clamp(0.55rem, 2.2vw, 0.65rem); font-weight: bold; color: #ffffff; user-select: none; }
         .cell-active-hand { outline: 2px solid #fbbf24; box-shadow: 0 0 10px #fbbf24; z-index: 10; }
 
-        .btn-close-matrix {
-            display: none;
-            background-color: #ef4444;
-            color: white;
-            padding: 12px;
-            font-size: 1rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 15px;
-            font-weight: bold;
-            width: 100%;
-        }
+        .btn-close-matrix { display: none; background-color: #ef4444; color: white; padding: 12px; font-size: 1rem; border: none; border-radius: 6px; cursor: pointer; margin-top: 15px; font-weight: bold; width: 100%; }
 
         @media (max-width: 768px) {
             .app-layout { flex-direction: column; align-items: center; }
-            .matrix-panel {
-                position: fixed;
-                top: 0;
-                right: -100%;
-                width: 100vw;
-                height: 100vh;
-                z-index: 999;
-                border-radius: 0;
-                justify-content: center;
-                transition: right 0.25s ease-in-out;
-            }
+            .matrix-panel { position: fixed; top: 0; right: -100%; width: 100vw; height: 100vh; z-index: 999; border-radius: 0; justify-content: center; transition: right 0.25s ease-in-out; }
             .matrix-panel.active { display: flex !important; right: 0; }
             .btn-close-matrix { display: block; }
         }
-
-        @media (min-width: 769px) {
-            .matrix-panel.active { display: flex !important; }
-        }
-
+        @media (min-width: 769px) { .matrix-panel.active { display: flex !important; } }
         .summary-container { text-align: center; padding: 30px; background-color: #1e293b; border-radius: 12px; display: none; max-width: 500px; }
     </style>
 </head>
 <body>
 
     <h1>MTT GTO Quiz Trainer</h1>
-    <p class="subtitle">Mesa 9-Max Simulada de Torneio</p>
+    <p class="subtitle">Mesa 9-Max Simulada (Carregamento Assíncrono Dinâmico JSON)</p>
 
     <div class="app-layout">
-        
         <div class="main-game-container" id="gameArea">
-            
             <div class="poker-table-area">
-                
                 <div class="felt-center">
-                    <div class="table-meta-info" id="tableStackMeta">--</div>
+                    <div class="table-meta-info" id="tableStackMeta">Carregando Ranges GTO...</div>
                     <div class="cards-delivery" id="visualCardsContainer"></div>
                 </div>
 
@@ -369,7 +152,6 @@
 
                 <div class="feedback-box" id="feedbackBox">Feedback</div>
             </div>
-
         </div>
 
         <div class="matrix-panel" id="matrixPanel">
@@ -377,22 +159,15 @@
             <div class="matrix" id="pokerMatrix"></div>
             <button class="btn-close-matrix" onclick="closeMatrixPanel()">← Voltar para a Mesa</button>
         </div>
-
     </div>
 
     <div class="summary-container" id="summaryArea">
         <h2>Treino Concluído!</h2>
-        <p>Seu aproveitamento final nas 100 mãos simuladas foi de:</p>
+        <p>Seu aproveitamento final foi de:</p>
         <div style="font-size: 3.5rem; font-weight: 900; color: #4ade80; margin: 15px 0;" id="finalAccuracy">0%</div>
         <p id="evaluationText" style="color: #94a3b8; margin-bottom: 25px;"></p>
         <button style="background-color: #10b981; padding: 12px 40px; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="restartTrainer()">Treinar Novamente</button>
     </div>
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
-        }
-    </script>
 
     <script>
         const cardValues = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
@@ -430,64 +205,18 @@
             "BTN": "seat-BTN", "SB": "seat-SB", "BB": "seat-BB"
         };
 
-        const dealerTokenCoordinates = {
-            "BTN": { bottom: "35px", left: "37%" }
-        };
-
-        const gtoDatabase = {
-            "100BB": {
-                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
-                "UTG1": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise" } },
-                "UTG2": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise" } },
-                "MP": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise" } },
-                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","JTs":"raise" } },
-                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise","76s":"raise" } },
-                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","A2s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","A8o":"raise","A7o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","K8s":"raise","K7s":"raise","K6s":"raise","KJo":"raise","KTo":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise","76s":"raise","65s":"raise","54s":"raise" } },
-                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise" } },
-                "BB": { "hands": {} }
-            },
-            "60BB": {
-                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","QJs":"raise","JTs":"raise","T9s":"raise" } },
-                "UTG1": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise" } },
-                "UTG2": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise" } },
-                "MP": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise" } },
-                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise" } },
-                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise" } },
-                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","A2s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","A8o":"raise","A7o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","K8s":"raise","K7s":"raise","K6s":"raise","KJo":"raise","KTo":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise","76s":"raise","65s":"raise","54s":"raise" } },
-                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise" } },
-                "BB": { "hands": {} }
-            },
-            "10BB": {
-                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AKo":"raise","AQo":"raise" } },
-                "UTG1": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","AKs":"raise","AKo":"raise" } },
-                "UTG2": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","AKs":"raise","AKo":"raise" } },
-                "MP": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise" } },
-                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","AKs":"raise","AQs":"raise","AKo":"raise","AQo":"raise" } },
-                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise" } },
-                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise" } },
-                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","KQs":"raise","KJs":"raise" } },
-                "BB": { "hands": {} }
-            }
-        };
-
-        const intermediaryFaixas = ["90BB", "80BB", "70BB", "50BB", "40BB", "30BB", "20BB"];
-        intermediaryFaixas.forEach(f => {
-            gtoDatabase[f] = (parseInt(f) >= 40) ? gtoDatabase["60BB"] : gtoDatabase["10BB"];
-        });
+        const dealerTokenCoordinates = { "BTN": { bottom: "35px", left: "37%" } };
 
         let totalHandsPlayed = 0;
         let correctAnswers = 0;
         let currentStack = "";
-        let currentPosition = ""; 
+        let currentPosition = "";
         let currentHand = "";
         let correctGtoAction = "";
         let isPanelVisible = false;
-
-        const posToClassMapping = {
-            "UTG": "seat-UTG", "UTG1": "seat-UTG1", "UTG2": "seat-UTG2",
-            "MP": "seat-MP", "HJ": "seat-HJ", "CO": "seat-CO",
-            "BTN": "seat-BTN", "SB": "seat-SB", "BB": "seat-BB"
-        };
+        
+        // Memória Cache Local para não refazer downloads de arquivos já baixados
+        let currentLoadedGtoData = null;
 
         function initMatrixGrid() {
             const matrixElement = document.getElementById('pokerMatrix');
@@ -504,29 +233,26 @@
             }
         }
 
-        // ESCRITA CORRIGIDA DE FORMA LIMPA E IMPECÁVEL AQUI:
         function renderMatrixColors() {
-            if (!isPanelVisible) return; 
+            if (!isPanelVisible || !currentLoadedGtoData) return; 
             
             let displayPos = currentPosition.replace('UTG1', 'UTG+1').replace('UTG2', 'UTG+2');
             document.getElementById('matrixPanelTitle').innerText = `${displayPos} (${currentStack})`;
             
-            const positionData = gtoDatabase[currentStack][currentPosition];
+            const positionData = currentLoadedGtoData[currentPosition];
 
             for (let i = 0; i < 13; i++) {
                 for (let j = 0; j < 13; j++) {
                     let handName = (i < j) ? cardValues[i] + cardValues[j] + "s" : (i > j) ? cardValues[j] + cardValues[i] + "o" : cardValues[i] + cardValues[j];
-                    
-                    // SINTAXE LIMPA CORRIGIDA
                     const cell = document.getElementById("grid-" + handName);
                     if (!cell) continue;
                     
-                    const action = positionData.hands[handName];
+                    const action = positionData ? positionData.hands[handName] : "fold";
                     cell.className = "cell";
                     if (handName === currentHand) cell.classList.add('cell-active-hand');
 
                     if (action === "raise") {
-                        cell.style.backgroundColor = (currentStack === "10BB" || currentStack === "20BB") ? "#b91c1c" : "#f97316"; 
+                        cell.style.backgroundColor = (currentStack === "10BB") ? "#b91c1c" : "#f97316"; 
                     } else if (action === "limp") {
                         cell.style.backgroundColor = "#3b82f6"; 
                     } else {
@@ -553,19 +279,13 @@
             const container = document.getElementById('visualCardsContainer');
             container.innerHTML = '';
 
-            const c1 = handStr[0];
-            const c2 = handStr[1];
-            const isSuited = handStr.endsWith('s');
-            const isOffsuit = handStr.endsWith('o');
-
-            const redSuits = ["♥", "♦"];
-            const blackSuits = ["♠", "♣"];
-            
+            const c1 = handStr[0]; const c2 = handStr[1];
+            const isSuited = handStr.endsWith('s'); const isOffsuit = handStr.endsWith('o');
+            const redSuits = ["♥", "♦"]; const blackSuits = ["♠", "♣"];
             let suit1, suit2, colorClass1, colorClass2;
 
             if (isSuited) {
-                suit1 = redSuits[Math.floor(Math.random() * redSuits.length)];
-                suit2 = suit1;
+                suit1 = redSuits[Math.floor(Math.random() * redSuits.length)]; suit2 = suit1;
                 colorClass1 = "card-red"; colorClass2 = "card-red";
             } else if (isOffsuit) {
                 suit1 = redSuits[Math.floor(Math.random() * redSuits.length)];
@@ -611,7 +331,8 @@
             });
         }
 
-        function generateNewScenario() {
+        // MOTOR ASSÍNCRONO: Decide qual JSON baixar dependendo do sorteio da rodada
+        async function generateNewScenario() {
             if (totalHandsPlayed >= 100) {
                 endGame();
                 return;
@@ -619,17 +340,37 @@
 
             document.getElementById('currentHandNum').innerText = totalHandsPlayed + 1;
 
+            // Sorteia as métricas
             currentStack = stacksList[Math.floor(Math.random() * stacksList.length)];
             const attackPositions = ["UTG", "UTG1", "UTG2", "MP", "HJ", "CO", "BTN", "SB"];
             currentPosition = attackPositions[Math.floor(Math.random() * attackPositions.length)];
             currentHand = allPossibleHands[Math.floor(Math.random() * allPossibleHands.length)];
+
+            document.getElementById('tableStackMeta').innerText = `Baixando Estratégia de ${currentStack}...`;
+
+            // MAPEAMENTO CIRÚRGICO DE ARQUIVOS EXTERNOS
+            let targetJsonFile = "60BB.json"; // Padrão para stacks confortáveis
+            if (currentStack === "10BB") {
+                targetJsonFile = "10BB.json";
+            } else if (currentStack === "100BB") {
+                targetJsonFile = "100BB.json";
+            }
+
+            // Dispara a requisição assíncrona Fetch API para ler o arquivo do repositório GitHub
+            try {
+                const response = await fetch(targetJsonFile);
+                currentLoadedGtoData = await response.json();
+            } catch (error) {
+                console.error("Erro crítico ao ler arquivo de range:", error);
+            }
 
             document.getElementById('tableStackMeta').innerText = `${currentStack} • Blinds 9-Max`;
             
             drawVisualCards(currentHand);
             refreshPokerTableGraph();
 
-            if (currentStack === "10BB" || currentStack === "20BB") {
+            // Configura os botões baseados no arquivo baixado
+            if (currentStack === "10BB") {
                 document.getElementById('btnRaise').style.display = "none";
                 document.getElementById('btnAllin').style.display = "inline-block";
                 document.getElementById('btnLimp').style.display = "none";
@@ -639,11 +380,11 @@
                 document.getElementById('btnLimp').style.display = (currentPosition === "SB") ? "inline-block" : "none";
             }
 
-            const positionData = gtoDatabase[currentStack][currentPosition];
+            const positionData = currentLoadedGtoData ? currentLoadedGtoData[currentPosition] : null;
             const databaseTarget = positionData ? positionData.hands[currentHand] : "fold";
             let basicAction = databaseTarget ? databaseTarget : "fold";
 
-            if (basicAction === "raise" && (currentStack === "10BB" || currentStack === "20BB")) {
+            if (basicAction === "raise" && currentStack === "10BB") {
                 correctGtoAction = "allin";
             } else {
                 correctGtoAction = basicAction;
