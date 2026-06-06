@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTT GTO Quiz Trainer - 9-Max Table</title>
+    <title>MTT GTO Quiz Trainer - Fixed Table</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -81,7 +81,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 1; /* Mantém as cartas sempre por baixo do botão D se eles se cruzarem */
+            z-index: 1;
         }
 
         .table-meta-info {
@@ -118,7 +118,7 @@
         .card-black { color: #1e293b; }
         .card-suit-bottom { align-self: flex-end; font-size: 1rem; }
 
-        /* ASSENTOS DOS JOGADORES */
+        /* ASSENTOS JOGADORES */
         .player-seat {
             position: absolute;
             background-color: #1e293b;
@@ -144,33 +144,33 @@
         .seat-status { color: #94a3b8; font-size: 0.65rem; margin-top: 2px; }
         .hero-active-seat .seat-status { color: #4ade80; }
 
-        /* Coordenadas 9-Max */
-        .seat-0 { top: -5px; left: 43%; }      
-        .seat-1 { top: 30px; right: 10px; }    
-        .seat-2 { top: 110px; right: -15px; }  
-        .seat-3 { bottom: 30px; right: 10px; } 
-        .seat-4 { bottom: -5px; left: 55%; }   
-        .seat-5 { bottom: -5px; left: 30%; }   
-        .seat-6 { bottom: 30px; left: 10px; }  
-        .seat-7 { top: 110px; left: -15px; }   
-        .seat-8 { top: 30px; left: 10px; }     
+        /* Posições na Mesa Oval */
+        .seat-0 { top: -5px; left: 43%; }      /* UTG */
+        .seat-1 { top: 30px; right: 10px; }    /* UTG1 */
+        .seat-2 { top: 110px; right: -15px; }  /* MP */
+        .seat-3 { bottom: 30px; right: 10px; } /* HJ */
+        .seat-4 { bottom: -5px; left: 55%; }   /* CO */
+        .seat-5 { bottom: -5px; left: 30%; }   /* BTN */
+        .seat-6 { bottom: 30px; left: 10px; }  /* SB */
+        .seat-7 { top: 110px; left: -15px; }   /* BB */
+        .seat-8 { top: 30px; left: 10px; }     /* UTG2 */
 
-        /* BOTÃO DO DEALER CORRIGIDO - Z-INDEX ELEVADO E NOVAS COORDENADAS INTERNAS */
+        /* BOTÃO DO DEALER AJUSTADO NA BORDA INTERNA */
         .dealer-button {
             position: absolute;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             background-color: #ffffff;
             color: #000000;
             border-radius: 50%;
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: 900;
             display: flex;
             align-items: center;
             justify-content: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
-            border: 1.5px solid #000000;
-            z-index: 10; /* Sempre no topo de tudo */
+            border: 2px solid #000000;
+            z-index: 10;
             transition: all 0.3s ease-in-out;
         }
 
@@ -226,7 +226,6 @@
             font-weight: bold;
             width: 100%;
         }
-        .btn-utility:hover { background-color: #0369a1; }
 
         .scoreboard {
             display: flex;
@@ -251,7 +250,7 @@
         .feedback-correct { background-color: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid #4ade80; }
         .feedback-wrong { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
 
-        /* PAINEL LATERAL DE RANGES */
+        /* PAINEL DE RANGE DRAWER SLIDE */
         .matrix-panel {
             background-color: #1e293b;
             padding: 20px;
@@ -300,7 +299,6 @@
             width: 100%;
         }
 
-        /* RESPONSIVIDADE MOBILE */
         @media (max-width: 768px) {
             .app-layout { flex-direction: column; align-items: center; }
             .matrix-panel {
@@ -343,13 +341,13 @@
 
                 <div id="seat-UTG" class="player-seat seat-0">UTG<div class="seat-status">Folded</div></div>
                 <div id="seat-UTG1" class="player-seat seat-1">UTG+1<div class="seat-status">Folded</div></div>
+                <div id="seat-UTG2" class="player-seat seat-8">UTG+2<div class="seat-status">Folded</div></div>
                 <div id="seat-MP" class="player-seat seat-2">MP<div class="seat-status">Folded</div></div>
                 <div id="seat-HJ" class="player-seat seat-3">HJ<div class="seat-status">Folded</div></div>
                 <div id="seat-CO" class="player-seat seat-4">CO<div class="seat-status">Folded</div></div>
                 <div id="seat-BTN" class="player-seat seat-5">BTN<div class="seat-status">Folded</div></div>
-                <div id="seat-SB" class="player-seat seat-6">SB<div class="seat-status">Folded</div></div>
-                <div id="seat-BB" class="player-seat seat-7">BB<div class="seat-status">Folded</div></div>
-                <div id="seat-UTG2" class="player-seat seat-8">UTG+2<div class="seat-status">Folded</div></div>
+                <div id="seat-SB" class="player-seat seat-6">SB<div class="seat-status">Blinds</div></div>
+                <div id="seat-BB" class="player-seat seat-7">BB<div class="seat-status">Blinds</div></div>
 
                 <div id="dealerButtonToken" class="dealer-button">D</div>
             </div>
@@ -433,19 +431,49 @@
             "BTN": "seat-BTN", "SB": "seat-SB", "BB": "seat-BB"
         };
 
-        // COORDENADAS RECALIBRADAS - Afastadas do centro para nunca encavalar nas cartas do feltro
+        // COORDENADAS REVISADAS DO BOTÃO DE DEALER (Ficam encostados no assento do BTN da rodada)
         const dealerTokenCoordinates = {
-            "UTG": { top: "35px", left: "47%" },
-            "UTG1": { top: "55px", right: "85px" },
-            "UTG2": { top: "55px", left: "85px" },
-            "MP": { top: "115px", right: "65px" },
-            "HJ": { bottom: "55px", right: "85px" },
+            "UTG": { top: "30px", left: "43%" },
+            "UTG1": { top: "65px", right: "40px" },
+            "UTG2": { top: "65px", left: "40px" },
+            "MP": { top: "110px", right: "20px" },
+            "HJ": { bottom: "65px", right: "40px" },
             "CO": { bottom: "35px", left: "55%" },
-            "BTN": { bottom: "35px", left: "38%" },
-            "SB": { bottom: "55px", left: "85px" },
-            "BB": { top: "115px", left: "65px" }
+            "BTN": { bottom: "35px", left: "37%" },
+            "SB": { bottom: "65px", left: "40px" },
+            "BB": { top: "110px", left: "20px" }
         };
 
+        // BANCO DE DADOS CORE EXPANDIDO (Com AKo, AQs e pares baixos adicionados explicitamente para evitar bugs de falsos folds)
         const gtoDatabase = {
             "100BB": {
-                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AK
+                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
+                "UTG1": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise" } },
+                "UTG2": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise" } },
+                "MP": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","JTs":"raise" } },
+                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise","76s":"raise" } },
+                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","A2s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","A8o":"raise","A7o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","K8s":"raise","K7s":"raise","K6s":"raise","KJo":"raise","KTo":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise","76s":"raise","65s":"raise","54s":"raise" } },
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise" } },
+                "BB": { "hands": {} }
+            },
+            "60BB": {
+                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","QJs":"raise","JTs":"raise","T9s":"raise" } },
+                "UTG1": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise" } },
+                "UTG2": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise" } },
+                "MP": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise" } },
+                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise" } },
+                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","A2s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","A8o":"raise","A7o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","K8s":"raise","K7s":"raise","K6s":"raise","KJo":"raise","KTo":"raise","QJo":"raise","QTo":"raise","JTo":"raise","QJs":"raise","QTs":"raise","Q9s":"raise","JTs":"raise","J9s":"raise","T9s":"raise","98s":"raise","87s":"raise","76s":"raise" } },
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise" } },
+                "BB": { "hands": {} }
+            },
+            "10BB": {
+                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AKo":"raise","AQo":"raise" } },
+                "UTG1": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","AKs":"raise","AKo":"raise" } },
+                "UTG2": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","AKs":"raise","AKo":"raise" } },
+                "MP": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","AKs":"raise","AQs":"raise","AKo":"raise","AQo":"raise" } },
+                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise" } },
+                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise" } },
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","AKs
