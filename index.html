@@ -8,7 +8,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
 
     <style>
         body {
@@ -170,6 +170,12 @@
     </div>
 
     <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
+        }
+    </script>
+
+    <script>
         const cardValues = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
         const allPossibleHands = [
             "AA","KK","QQ","JJ","TT","99","88","77","66","55","44","33","22",
@@ -215,7 +221,6 @@
         let correctGtoAction = "";
         let isPanelVisible = false;
         
-        // Memória Cache Local para não refazer downloads de arquivos já baixados
         let currentLoadedGtoData = null;
 
         function initMatrixGrid() {
@@ -227,7 +232,7 @@
                     const cell = document.createElement('div');
                     cell.className = 'cell';
                     cell.innerText = handName;
-                    cell.setAttribute('id', `grid-${handName}`);
+                    cell.setAttribute('id', "grid-" + handName);
                     matrixElement.appendChild(cell);
                 }
             }
@@ -237,7 +242,7 @@
             if (!isPanelVisible || !currentLoadedGtoData) return; 
             
             let displayPos = currentPosition.replace('UTG1', 'UTG+1').replace('UTG2', 'UTG+2');
-            document.getElementById('matrixPanelTitle').innerText = `${displayPos} (${currentStack})`;
+            document.getElementById('matrixPanelTitle').innerText = displayPos + " (" + currentStack + ")";
             
             const positionData = currentLoadedGtoData[currentPosition];
 
@@ -247,7 +252,8 @@
                     const cell = document.getElementById("grid-" + handName);
                     if (!cell) continue;
                     
-                    const action = positionData ? positionData.hands[handName] : "fold";
+                    // Tratamento seguro: se os dados da posição não existirem no arquivo, assume fold
+                    const action = (positionData && positionData.hands) ? positionData.hands[handName] : "fold";
                     cell.className = "cell";
                     if (handName === currentHand) cell.classList.add('cell-active-hand');
 
@@ -320,18 +326,17 @@
 
                 if (pos === currentPosition) {
                     seatElement.classList.add('hero-active-seat');
-                    seatElement.innerHTML = `${cleanLabelName}<div class="seat-status">Sua Vez</div>`;
+                    seatElement.innerHTML = cleanLabelName + '<div class="seat-status">Sua Vez</div>';
                 } else if (idx < heroIndex) {
-                    seatElement.innerHTML = `${cleanLabelName}<div class="seat-status" style="color:#ef4444;">Folded</div>`;
+                    seatElement.innerHTML = cleanLabelName + '<div class="seat-status" style="color:#ef4444;">Folded</div>';
                 } else if (pos === "SB" || pos === "BB") {
-                    seatElement.innerHTML = `${cleanLabelName}<div class="seat-status" style="color:#60a5fa;">Blinds</div>`;
+                    seatElement.innerHTML = cleanLabelName + '<div class="seat-status" style="color:#60a5fa;">Blinds</div>';
                 } else {
-                    seatElement.innerHTML = `${cleanLabelName}<div class="seat-status">Aguardando</div>`;
+                    seatElement.innerHTML = cleanLabelName + '<div class="seat-status">Aguardando</div>';
                 }
             });
         }
 
-        // MOTOR ASSÍNCRONO: Decide qual JSON baixar dependendo do sorteio da rodada
         async function generateNewScenario() {
             if (totalHandsPlayed >= 100) {
                 endGame();
@@ -340,23 +345,21 @@
 
             document.getElementById('currentHandNum').innerText = totalHandsPlayed + 1;
 
-            // Sorteia as métricas
             currentStack = stacksList[Math.floor(Math.random() * stacksList.length)];
             const attackPositions = ["UTG", "UTG1", "UTG2", "MP", "HJ", "CO", "BTN", "SB"];
             currentPosition = attackPositions[Math.floor(Math.random() * attackPositions.length)];
             currentHand = allPossibleHands[Math.floor(Math.random() * allPossibleHands.length)];
 
-            document.getElementById('tableStackMeta').innerText = `Baixando Estratégia de ${currentStack}...`;
+            document.getElementById('tableStackMeta').innerText = "Baixando Estratégia de " + currentStack + "...";
 
-            // MAPEAMENTO CIRÚRGICO DE ARQUIVOS EXTERNOS
-            let targetJsonFile = "60BB.json"; // Padrão para stacks confortáveis
+            // MAPEAMENTO SEGURO DE ARQUIVOS EXTERNOS
+            let targetJsonFile = "60BB.json"; 
             if (currentStack === "10BB") {
                 targetJsonFile = "10BB.json";
             } else if (currentStack === "100BB") {
                 targetJsonFile = "100BB.json";
             }
 
-            // Dispara a requisição assíncrona Fetch API para ler o arquivo do repositório GitHub
             try {
                 const response = await fetch(targetJsonFile);
                 currentLoadedGtoData = await response.json();
@@ -364,12 +367,11 @@
                 console.error("Erro crítico ao ler arquivo de range:", error);
             }
 
-            document.getElementById('tableStackMeta').innerText = `${currentStack} • Blinds 9-Max`;
+            document.getElementById('tableStackMeta').innerText = currentStack + " • Blinds 9-Max";
             
             drawVisualCards(currentHand);
             refreshPokerTableGraph();
 
-            // Configura os botões baseados no arquivo baixado
             if (currentStack === "10BB") {
                 document.getElementById('btnRaise').style.display = "none";
                 document.getElementById('btnAllin').style.display = "inline-block";
@@ -381,7 +383,7 @@
             }
 
             const positionData = currentLoadedGtoData ? currentLoadedGtoData[currentPosition] : null;
-            const databaseTarget = positionData ? positionData.hands[currentHand] : "fold";
+            const databaseTarget = (positionData && positionData.hands) ? positionData.hands[currentHand] : "fold";
             let basicAction = databaseTarget ? databaseTarget : "fold";
 
             if (basicAction === "raise" && currentStack === "10BB") {
@@ -402,16 +404,16 @@
             if (userAction === correctGtoAction) {
                 correctAnswers++;
                 feedbackBox.className = "feedback-box feedback-correct";
-                feedbackBox.innerText = `Acertou! Com ${currentHand} no ${displayPosName} (${currentStack}), o correto é ${correctGtoAction.toUpperCase()}.`;
+                feedbackBox.innerText = "Acertou! Com " + currentHand + " no " + displayPosName + " (" + currentStack + "), o correto é " + correctGtoAction.toUpperCase() + ".";
             } else {
                 feedbackBox.className = "feedback-box feedback-wrong";
-                feedbackBox.innerText = `Errou! Você deu ${userAction.toUpperCase()}. O GTO Wizard indica ${correctGtoAction.toUpperCase()} com ${currentHand} no ${displayPosName} (${currentStack}).`;
+                feedbackBox.innerText = "Errou! Você deu " + userAction.toUpperCase() + ". O GTO Wizard indica " + correctGtoAction.toUpperCase() + " com " + currentHand + " no " + displayPosName + " (" + currentStack + ").";
             }
 
             totalHandsPlayed++;
             const accuracy = Math.round((correctAnswers / totalHandsPlayed) * 100);
             document.getElementById('correctCount').innerText = correctAnswers;
-            document.getElementById('accuracyPercent').innerText = `${accuracy}%`;
+            document.getElementById('accuracyPercent').innerText = accuracy + "%";
 
             generateNewScenario();
         }
@@ -423,7 +425,7 @@
             finalContainer.style.display = "block";
 
             const accuracy = Math.round((correctAnswers / 100) * 100);
-            document.getElementById('finalAccuracy').innerText = `${accuracy}%`;
+            document.getElementById('finalAccuracy').innerText = accuracy + "%";
 
             const evalText = document.getElementById('evaluationText');
             if (accuracy >= 90) evalText.innerText = "Nível Profissional! Sua percepção de ranges de RFI e Shoves em mesa oval está totalmente polida.";
