@@ -1,0 +1,17 @@
+{
+  "name": "MTT GTO Quiz Trainer",
+  "short_name": "GTO Trainer",
+  "description": "Simulador interativo de ranges de RFI baseado em GTO para Torneios.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#121824",
+  "theme_color": "#1e293b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3258/3258495.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

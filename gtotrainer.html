@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTT GTO Trainer - Ultimate Edition</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121824;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #4ade80;
+            margin-bottom: 5px;
+        }
+
+        p.subtitle {
+            color: #94a3b8;
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+
+        /* Layout Principal com Split Lateral */
+        .app-layout {
+            display: flex;
+            gap: 25px;
+            max-width: 1200px;
+            width: 100%;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .trainer-container {
+            background-color: #1e293b;
+            padding: 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            flex: 1;
+            max-width: 600px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        /* Coluna da Direita (Matriz Ocultável) */
+        .matrix-panel {
+            background-color: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: none; /* Começa oculto */
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .matrix-title {
+            font-size: 1.1rem;
+            color: #4ade80;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .matrix {
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            gap: 2px;
+            width: 380px;
+            height: 380px;
+        }
+
+        .cell {
+            background-color: #334155;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: bold;
+            color: #ffffff;
+            user-select: none;
+        }
+
+        /* Destaca a mão que o usuário recebeu no quiz */
+        .cell-active-hand {
+            outline: 2px solid #fbbf24;
+            box-shadow: 0 0 10px #fbbf24;
+            z-index: 10;
+        }
+
+        .scenario-box {
+            background-color: #0f172a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #334155;
+        }
+
+        .scenario-title {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .scenario-details {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffffff;
+            margin: 10px 0;
+        }
+
+        .hand-display {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #fbbf24;
+            background-color: #1e293b;
+            display: inline-block;
+            padding: 5px 20px;
+            border-radius: 6px;
+            margin-top: 5px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 15px;
+            height: 50px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+            min-width: 100px;
+        }
+
+        .btn-raise { background-color: #f97316; }
+        .btn-raise:hover { background-color: #ea580c; }
+        
+        .btn-allin { background-color: #b91c1c; }
+        .btn-allin:hover { background-color: #991b1b; }
+
+        .btn-limp { background-color: #3b82f6; }
+        .btn-limp:hover { background-color: #2563eb; }
+
+        .btn-fold { background-color: #4b5563; }
+        .btn-fold:hover { background-color: #374151; }
+
+        /* Botão União Utilitário para Ver Gráfico */
+        .btn-utility {
+            background-color: #0284c7;
+            color: white;
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .btn-utility:hover { background-color: #0369a1; }
+
+        .scoreboard {
+            display: flex;
+            justify-content: space-between;
+            background-color: #0f172a;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .score-highlight {
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        .feedback-box {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            display: none;
+            line-height: 1.4;
+        }
+
+        .feedback-correct {
+            background-color: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+            border: 1px solid #4ade80;
+        }
+
+        .feedback-wrong {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .btn-restart {
+            background-color: #10b981;
+            padding: 12px 40px;
+            font-size: 1.1rem;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>MTT GTO Quiz Trainer</h1>
+    <p class="subtitle">Laboratório Avançado com Matriz do Solver Integrada</p>
+
+    <!-- LAYOUT PRINCIPAL EM DUAS COLUNAS -->
+    <div class="app-layout">
+        
+        <!-- COLUNA ESQUERDA: O JOGO DO TREINO -->
+        <div class="trainer-container" id="gameContainer">
+            
+            <div class="feedback-box" id="feedbackBox">Feedback aqui</div>
+
+            <div class="scenario-box">
+                <div class="scenario-title" id="scenarioMeta">Carregando...</div>
+                <div class="scenario-details">
+                    Sua Mão: <br>
+                    <div class="hand-display" id="currentHandDisplay">--</div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="btnRaise" class="btn btn-raise" onclick="submitAction('raise')">Raise</button>
+                <button id="btnAllin" class="btn btn-allin" onclick="submitAction('allin')">All-In</button>
+                <button id="btnLimp" class="btn btn-limp" onclick="submitAction('limp')">Limp</button>
+                <button id="btnFold" class="btn btn-fold" onclick="submitAction('fold')">Fold</button>
+            </div>
+
+            <!-- Botão de Alternância do Painel de Range -->
+            <button class="btn-utility" onclick="toggleMatrixPanel()">Ver Matriz GTO deste Cenário</button>
+
+            <div class="scoreboard">
+                <div>Mão: <span id="currentHandNum" class="score-highlight">1</span> / 100</div>
+                <div>Acertos: <span id="correctCount" class="score-highlight">0</span></div>
+                <div>Aproveitamento: <span id="accuracyPercent" class="score-highlight">0%</span></div>
+            </div>
+        </div>
+
+        <!-- COLUNA DIREITA: A MATRIZ DINÂMICA DO WIZARD -->
+        <div class="matrix-panel" id="matrixPanel">
+            <div class="matrix-title" id="matrixPanelTitle">Matriz de Range</div>
+            <div class="matrix" id="pokerMatrix"></div>
+        </div>
+
+    </div>
+
+    <!-- TELA DE RELATÓRIO FINAL -->
+    <div class="trainer-container" id="summaryContainer" style="display: none; margin-top: 20px;">
+        <h2>Treino Concluído!</h2>
+        <p>Seu aproveitamento médio nas 100 mãos GTO foi de:</p>
+        <div class="summary-score" id="finalAccuracy" style="font-size: 4rem; font-weight: 900; color: #4ade80; margin: 20px 0;">0%</div>
+        <p id="evaluationText" style="color: #94a3b8; margin-bottom: 25px;"></p>
+        <button class="btn-restart" onclick="restartTrainer()">Treinar Novamente</button>
+    </div>
+
+    <script>
+        const cardValues = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+        const allPossibleHands = [
+            "AA","KK","QQ","JJ","TT","99","88","77","66","55","44","33","22",
+            "AKs","AQs","AJs","ATs","A9s","A8s","A7s","A6s","A5s","A4s","A3s","A2s",
+            "AKo","AQo","AJo","ATo","A9o","A8o","A7o","A6o","A5o","A4o","A3o","A2o",
+            "KQs","KJs","KTs","K9s","K8s","K7s","K6s","K5s","K4s","K3s","K2s",
+            "KJo","KTo","K9o","K8o","K7o","K6o","K5o","K4o","K3o","K2o",
+            "QJs","QTs","Q9s","Q8s","Q7s","Q6s","Q5s","Q4s","Q3s","Q2s",
+            "QJo","QTo","Q9o","Q8o","Q7o","Q6o","Q5o","Q4o","Q3o","Q2o",
+            "JTs","J9s","J8s","J7s","J6s","J5s","J4s","J3s","J2s",
+            "JTo","J9o","J8o","J7o","J6o","J5o","J4o","J3o","J2o",
+            "T9s","T8s","T7s","T6s","T5s","T4s","T3s","T2s",
+            "T9o","T8o","T7o","T6o","T5o","T4o","T3o","T2o",
+            "98s","97s","96s","95s","94s","93s","92s",
+            "98o","97o","96o","95o","94o","93o","92o",
+            "87s","86s","85s","84s","83s","82s",
+            "87o","86o","85o","84o","83o","82o",
+            "76s","75s","74s","73s","72s",
+            "76o","75o","74o","73o","72o",
+            "65s","64s","63s","62s",
+            "65o","64o","63o","62o",
+            "54s","53s","52s",
+            "54o","53o","52o",
+            "43s","42s","43o","42o","32s","32o"
+        ];
+
+        const stacksList = ["100BB", "90BB", "80BB", "70BB", "60BB", "50BB", "40BB", "30BB", "20BB", "10BB"];
+        const positionsList = ["UTG", "HJ", "CO", "BTN", "SB"];
+
+        const gtoDatabase = {
+            "100BB": {
+                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise" } },
+                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise","76s":"raise" } },
+                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","A2s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","A8o":"raise","A7o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","K8s":"raise","K7s":"raise","K6s":"raise","KJo":"raise","KTo":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise","76s":"raise","65s":"raise","54s":"raise" } },
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise" } }
+            },
+            "90BB": {
+                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","JTs":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
+                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","A4s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise" } },
+                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","A2s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","A8o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","K8s":"raise","KJo":"raise","KTo":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise" } },
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","QJs":"raise" } }
+            },
+            "80BB": {
+                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","QJs":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","JTs":"raise" } },
+                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
+                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","A4s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","KJo":"raise","KTo":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise" } }
+            },
+            "70BB": {
+                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise","KQs":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise" } },
+                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","JTs":"raise" } },
+                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","KJo":"raise","QJs":"raise","JTs":"raise" } },
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise" } }
+            },
+            "60BB": {
+                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","QJs":"raise","JTs":"raise","T9s":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise" } },
+                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise" } },
+                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","A2s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","A8o":"raise","A7o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","K8s":"raise","K7s":"raise","K6s":"raise","KJo":"raise","KTo":"raise","QJo":"raise","QTo":"raise","JTo":"raise","QJs":"raise","QTs":"raise","Q9s":"raise","JTs":"raise","J9s":"raise","T9s":"raise","98s":"raise","87s":"raise","76s":"raise" } },
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise" } }
+            },
+            "50BB": {
+                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","JTs":"raise" } },
+                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","JTs":"raise" } },
+                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","A4s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","KJo":"raise","QJs":"raise","JTs":"raise" } },
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise", "77":"limp", "66":"limp" } }
+            },
+            "40BB": {
+                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise" } },
+                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise" } },
+                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise" } },
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","AKs":"raise","AQs":"raise","AKo":"raise","AQo":"raise", "99":"limp", "88":"limp", "77":"limp", "AJs":"limp", "ATs":"limp", "KQs":"limp", "KJs":"limp" } }
+            },
+            "30BB": {
+                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","QJs":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","QJs":"raise","JTs":"raise" } },
+                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KJo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
+                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","A2s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","A8o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","K8s":"raise","KJo":"raise","KTo":"raise","QJo":"raise","QTo":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise" } },
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise","99":"limp","88":"limp","77":"limp","66":"limp","55":"limp","44":"limp","ATs":"limp","A9s":"limp","A8s":"limp","A7s":"limp","A6s":"limp","A5s":"limp","A4s":"limp","A3s":"limp","A2s":"limp","AJo":"limp","ATo":"limp","A9o":"limp","A8o":"limp","KQs":"limp","KJs":"limp","KTs":"limp","K9s":"limp","KJo":"limp","KTo":"limp","QJs":"limp","QTs":"limp","JTs":"limp","T9s":"limp","98s":"limp" } }
+            },
+            "20BB": {
+                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise" } },
+                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise" } },
+                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise" } },
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise","AJo":"raise","77":"limp","66":"limp","55":"limp","44":"limp","ATs":"limp","A9s":"limp","A8s":"limp","A5s":"limp","ATo":"limp","KQs":"limp","KJs":"limp","KTo":"limp","QJs":"limp" } }
+            },
+            "10BB": {
+                "UTG": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AKo":"raise","AQo":"raise" } },
+                "HJ": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise" } },
+                "CO": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","AJo":"raise" } },
+                "BTN": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise" } },
+                "SB": { "hands": { "AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","KQs":"raise","KJs":"raise" } }
+            }
+        };
+
+        let totalHandsPlayed = 0;
+        let correctAnswers = 0;
+        let currentStack = "";
+        let currentPosition = "";
+        let currentHand = "";
+        let correctGtoAction = "";
+        let isPanelVisible = false; // Estado do painel lateral
+
+        // FUNÇÃO: Cria a grade 13x13 na barra lateral (Roda apenas uma vez no início)
+        function initMatrixGrid() {
+            const matrixElement = document.getElementById('pokerMatrix');
+            matrixElement.innerHTML = ''; 
+
+            for (let i = 0; i < 13; i++) {
+                for (let j = 0; j < 13; j++) {
+                    let handName = "";
+                    if (i < j) {
+                        handName = cardValues[i] + cardValues[j] + "s";
+                    } else if (i > j) {
+                        handName = cardValues[j] + cardValues[i] + "o";
+                    } else {
+                        handName = cardValues[i] + cardValues[j];
+                    }
+
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.innerText = handName;
+                    cell.setAttribute('id', `grid-${handName}`);
+                    matrixElement.appendChild(cell);
+                }
+            }
+        }
+
+        // FUNÇÃO: Pinta e atualiza as cores da matriz com base no cenário do Quiz
+        function renderMatrixColors() {
+            if (!isPanelVisible) return; // Economiza processamento se estiver fechado
+
+            document.getElementById('matrixPanelTitle').innerText = `${currentPosition} (${currentStack})`;
+            const positionData = gtoDatabase[currentStack][currentPosition];
+
+            for (let i = 0; i < 13; i++) {
+                for (let j = 0; j < 13; j++) {
+                    let handName = "";
+                    if (i < j) {
+                        handName = cardValues[i] + cardValues[j] + "s";
+                    } else if (i > j) {
+                        handName = cardValues[j] + cardValues[i] + "o";
+                    } else {
+                        handName = cardValues[i] + cardValues[j];
+                    }
+
+                    const cell = document.getElementById(`grid-${handName}`);
+                    const action = positionData.hands[handName];
+
+                    // Remove classes antigas de destaque
+                    cell.className = "cell";
+
+                    // Destaca fisicamente a mão atual sorteada para o usuário jogar
+                    if (handName === currentHand) {
+                        cell.classList.add('cell-active-hand');
+                    }
+
+                    // Pinta de acordo com o GTO real mapeado
+                    if (action === "raise") {
+                        // Se o stack for curto, pinta o raise de vermelho escuro (allin)
+                        cell.style.backgroundColor = (currentStack === "10BB" || currentStack === "15BB") ? "#b91c1c" : "#f97316"; 
+                    } else if (action === "limp") {
+                        cell.style.backgroundColor = "#3b82f6"; 
+                    } else {
+                        cell.style.backgroundColor = "#334155"; 
+                    }
+                }
+            }
+        }
+
+        // FUNÇÃO: Liga/Desliga a exibição da coluna da direita
+        function toggleMatrixPanel() {
+            const panel = document.getElementById('matrixPanel');
+            isPanelVisible = !isPanelVisible;
+
+            if (isPanelVisible) {
+                panel.style.display = "flex";
+                renderMatrixColors(); // Força a pintura imediata
+            } else {
+                panel.style.display = "none";
+            }
+        }
+
+        function generateNewScenario() {
+            if (totalHandsPlayed >= 100) {
+                endGame();
+                return;
+            }
+
+            document.getElementById('currentHandNum').innerText = totalHandsPlayed + 1;
+
+            currentStack = stacksList[Math.floor(Math.random() * stacksList.length)];
+            currentPosition = positionsList[Math.floor(Math.random() * positionsList.length)];
+            currentHand = allPossibleHands[Math.floor(Math.random() * allPossibleHands.length)];
+
+            // Controle dinâmico visual dos botões
+            if (currentStack === "10BB" || currentStack === "15BB") {
+                document.getElementById('btnRaise').style.display = "none";
+                document.getElementById('btnAllin').style.display = "inline-block";
+                document.getElementById('btnLimp').style.display = "none";
+            } else {
+                document.getElementById('btnRaise').style.display = "inline-block";
+                document.getElementById('btnAllin').style.display = "none";
+                
+                if (currentPosition === "SB") {
+                    document.getElementById('btnLimp').style.display = "inline-block";
+                } else {
+                    document.getElementById('btnLimp').style.display = "none";
+                }
+            }
+
+            const databaseTarget = gtoDatabase[currentStack][currentPosition].hands[currentHand];
+            let basicAction = databaseTarget ? databaseTarget : "fold";
+
+            if (basicAction === "raise" && (currentStack === "10BB" || currentStack === "15BB")) {
+                correctGtoAction = "allin";
+            } else {
+                correctGtoAction = basicAction;
+            }
+
+            document.getElementById('scenarioMeta').innerText = `Stack: ${currentStack}  |  Posição: ${currentPosition} (Mesa em Gaps)`;
+            document.getElementById('currentHandDisplay').innerText = currentHand;
+
+            // Atualiza o desenho se o painel estiver aberto no momento da nova mão
+            renderMatrixColors();
+        }
+
+        function submitAction(userAction) {
+            const feedbackBox = document.getElementById('feedbackBox');
+            feedbackBox.style.display = "block";
+
+            if (userAction === correctGtoAction) {
+                correctAnswers++;
+                feedbackBox.className = "feedback-box feedback-correct";
+                feedbackBox.innerText = `Boa! Com ${currentHand} no ${currentPosition} (${currentStack}), a ação ideal é ${correctGtoAction.toUpperCase()}.`;
+            } else {
+                feedbackBox.className = "feedback-box feedback-wrong";
+                feedbackBox.innerText = `Erro! Você escolheu ${userAction.toUpperCase()}. O GTO correto com ${currentHand} no ${currentPosition} (${currentStack}) é ${correctGtoAction.toUpperCase()}.`;
+            }
+
+            totalHandsPlayed++;
+
+            const accuracy = Math.round((correctAnswers / totalHandsPlayed) * 100);
+            document.getElementById('correctCount').innerText = correctAnswers;
+            document.getElementById('accuracyPercent').innerText = `${accuracy}%`;
+
+            generateNewScenario();
+        }
+
+        function endGame() {
+            document.getElementById('gameContainer').style.display = "none";
+            document.getElementById('matrixPanel').style.display = "none";
+            const finalContainer = document.getElementById('summaryContainer');
+            finalContainer.style.display = "block";
+
+            const accuracy = Math.round((correctAnswers / 100) * 100);
+            document.getElementById('finalAccuracy').innerText = `${accuracy}%`;
+
+            const evalText = document.getElementById('evaluationText');
+            if (accuracy >= 90) {
+                evalText.innerText = "Excelente! Seu instinto GTO para ranges lineares e de push/fold está calibrado em nível profissional.";
+            } else if (accuracy >= 75) {
+                evalText.innerText = "Bom! Domínio aceitável, mas use a matriz lateral para identificar quais mãos marginais você está superestimando.";
+            } else {
+                evalText.innerText = "Precisa de ajustes urgentes. Mantenha a matriz aberta durante o treino para forçar sua mente a memorizar o desenho geométrico dos ranges.";
+            }
+        }
+
+        function restartTrainer() {
+            totalHandsPlayed = 0;
+            correctAnswers = 0;
+            isPanelVisible = false;
+            document.getElementById('correctCount').innerText = "0";
+            document.getElementById('accuracyPercent').innerText = "0%";
+            document.getElementById('feedbackBox').style.display = "none";
+            document.getElementById('summaryContainer').style.display = "none";
+            document.getElementById('gameContainer').style.display = "block";
+            generateNewScenario();
+        }
+
+        // Execuções Iniciais
+        initMatrixGrid();
+        generateNewScenario();
+    </script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('PWA Service Worker registrado com sucesso!', reg))
+                .catch(err => console.error('Erro ao registrar Service Worker:', err));
+        }
+    </script>
+</body>
+</html>
