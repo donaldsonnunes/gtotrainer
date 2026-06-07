@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTT GTO Quiz Trainer - Interactive Version</title>
+    <title>MTT GTO Quiz Trainer - Professional Version</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -29,7 +29,7 @@
         .app-layout { display: flex; gap: 20px; max-width: 1100px; width: 100%; justify-content: center; align-items: flex-start; }
         .main-game-container { flex: 1; max-width: 600px; width: 100%; display: flex; flex-direction: column; align-items: center; }
 
-        /* MESA OVAL REFORÇADA */
+        /* MESA OVAL */
         .poker-table-area {
             width: 100%; height: 280px; background-color: #0b1320; border-radius: 140px; border: 12px solid #334155;
             box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 10px 25px rgba(0,0,0,0.5); position: relative; margin: 20px 0; box-sizing: border-box;
@@ -73,7 +73,7 @@
             border-radius: 50%; font-size: 0.75rem; font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); border: 2px solid #000000; z-index: 10;
         }
 
-        /* CONTROLES DO TREINADOR */
+        /* CONTROLES */
         .action-block { background-color: #1e293b; padding: 15px; border-radius: 12px; width: 100%; box-sizing: border-box; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .action-buttons { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; height: 46px; align-items: center; }
         .btn { padding: 12px; font-size: 1rem; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; color: white; flex: 1; max-width: 110px; }
@@ -94,7 +94,7 @@
         .matrix-panel { background-color: #1e293b; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: none; flex-direction: column; align-items: center; box-sizing: border-box; }
         .matrix-title { font-size: 1rem; color: #4ade80; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; text-align: center; }
         
-        /* SELETOR INTERATIVO DE POSIÇÕES DE APOIO */
+        /* SELETOR INTERATIVO DE POSIÇÕES */
         .matrix-position-selector {
             display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; width: 100%; max-width: 360px; margin-bottom: 15px;
         }
@@ -244,7 +244,7 @@
         let correctAnswers = 0;
         let currentStack = "";
         let currentPosition = ""; 
-        let matrixActivePosition = ""; // Controla qual posição está iluminada na matriz de estudo agora
+        let matrixActivePosition = ""; 
         let currentHand = "";
         let correctGtoAction = "";
         let isPanelVisible = false;
@@ -271,7 +271,6 @@
             let displayPos = matrixActivePosition.replace('UTG1', 'UTG+1').replace('UTG2', 'UTG+2');
             document.getElementById('matrixPanelTitle').innerText = displayPos + " (" + currentStack + ")";
             
-            // Ilumina o botão selecionado na barra superior do Drawer
             positionsChronological.forEach(pos => {
                 let btn = document.getElementById("filter-" + pos);
                 if (btn) {
@@ -294,7 +293,6 @@
                     }
                     
                     cell.className = "cell";
-                    // Só destaca a borda amarela da sua mão se você estiver olhando a mesma posição do quiz
                     if (handName === currentHand && matrixActivePosition === currentPosition) {
                         cell.classList.add('cell-active-hand');
                     }
@@ -310,7 +308,6 @@
             }
         }
 
-        // FUNÇÃO DE TROCA DE MESA INTERATIVA NA MATRIZ
         function switchMatrixPositionView(targetPos) {
             matrixActivePosition = targetPos;
             renderMatrixColors();
@@ -319,7 +316,7 @@
         function openMatrixPanel() {
             const panel = document.getElementById('matrixPanel');
             isPanelVisible = true;
-            matrixActivePosition = currentPosition; // Inicia mostrando por padrão o range do quiz atual
+            matrixActivePosition = currentPosition; 
             panel.classList.add('active');
             renderMatrixColors();
         }
@@ -401,19 +398,20 @@
 
             document.getElementById('tableStackMeta').innerText = "Buscando Estratégia " + currentStack + "...";
 
-            // DIRECIONAMENTO INTELIGENTE DE ENGENHARIA DE RANGES
             let targetJsonFile = "60BB.json"; 
-            if (currentStack === "10BB" || currentStack === "20BB") {
-                targetJsonFile = "10BB.json";
-            } else if (currentStack === "100BB") {
+            if (currentStack === "100BB" || currentStack === "90BB") {
                 targetJsonFile = "100BB.json";
+            } else if (currentStack === "40BB" || currentStack === "30BB") {
+                targetJsonFile = "30BB.json";
+            } else if (currentStack === "20BB" || currentStack === "10BB") {
+                targetJsonFile = "20BB.json";
             }
 
             try {
                 const response = await fetch('./' + targetJsonFile + "?v=" + new Date().getTime());
                 currentLoadedGtoData = await response.json();
             } catch (error) {
-                console.error("Erro crítico ao carregar JSON:", error);
+                console.error("Erro ao carregar JSON:", error);
             }
 
             document.getElementById('tableStackMeta').innerText = currentStack + " • Blinds 9-Max";
