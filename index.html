@@ -110,13 +110,13 @@
 <body>
 
     <h1>MTT GTO Quiz Trainer</h1>
-    <p class="subtitle">Mesa 9-Max Simulada (Carregamento Assíncrono Dinâmico JSON)</p>
+    <p class="subtitle">Mesa 9-Max Simulada (Ranges Dinâmicos Assíncronos)</p>
 
     <div class="app-layout">
         <div class="main-game-container" id="gameArea">
             <div class="poker-table-area">
                 <div class="felt-center">
-                    <div class="table-meta-info" id="tableStackMeta">Carregando Ranges GTO...</div>
+                    <div class="table-meta-info" id="tableStackMeta">Sincronizando Ranges GTO...</div>
                     <div class="cards-delivery" id="visualCardsContainer"></div>
                 </div>
 
@@ -167,6 +167,16 @@
         <p id="evaluationText" style="color: #94a3b8; margin-bottom: 25px;"></p>
         <button style="background-color: #10b981; padding: 12px 40px; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="restartTrainer()">Treinar Novamente</button>
     </div>
+
+    <script>
+        // Força o Service Worker a se reinstalar se houver mudanças no arquivo sw.js
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').then(reg => {
+                reg.update(); 
+                console.log('SW Sincronizado!');
+            }).catch(err => console.error(err));
+        }
+    </script>
 
     <script>
         const cardValues = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
@@ -347,16 +357,17 @@
 
             document.getElementById('tableStackMeta').innerText = "Baixando Estratégia de " + currentStack + "...";
 
-            // MAPEAMENTO CIRÚRGICO CORRIGIDO PARA EVITAR CACHE DE NAVEGADOR
-            let targetJsonFile = "./60BB.json"; 
-            if (currentStack === "10BB") {
-                targetJsonFile = "./10BB.json";
+            // MAPEAMENTO COM DIRETÓRIO LOCAL DINÂMICO
+            let targetJsonFile = "60BB.json"; 
+            if (currentStack === "10BB" || currentStack === "20BB") {
+                targetJsonFile = "10BB.json";
             } else if (currentStack === "100BB") {
-                targetJsonFile = "./100BB.json";
+                targetJsonFile = "100BB.json";
             }
 
             try {
-                const response = await fetch(targetJsonFile + "?v=" + new Date().getTime());
+                // Adiciona carimbo de tempo para quebrar o cache de dados locais
+                const response = await fetch('./' + targetJsonFile + "?v=" + new Date().getTime());
                 currentLoadedGtoData = await response.json();
             } catch (error) {
                 console.error("Erro crítico ao ler arquivo de range:", error);
