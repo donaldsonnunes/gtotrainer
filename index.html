@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTT GTO Quiz Trainer - Async JSON Version</title>
+    <title>MTT GTO Quiz Trainer - Async JSON Fixed</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -89,11 +89,10 @@
         .feedback-correct { background-color: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid #4ade80; }
         .feedback-wrong { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
 
-        /* MATRIZ DEestudo */
+        /* MATRIZ DE CONSULTA INTERATIVA */
         .matrix-panel { background-color: #1e293b; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: none; flex-direction: column; align-items: center; box-sizing: border-box; }
         .matrix-title { font-size: 1rem; color: #4ade80; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; text-align: center; }
         
-        /* SELETOR SUPERIOR */
         .matrix-position-selector {
             display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; width: 100%; max-width: 360px; margin-bottom: 15px;
         }
@@ -245,8 +244,6 @@
         let currentHand = "";
         let correctGtoAction = "";
         let isPanelVisible = false;
-        
-        // Memória cache local para guardar os dados do JSON baixado
         let currentLoadedGtoData = null;
 
         function initMatrixGrid() {
@@ -286,10 +283,10 @@
                     const cell = document.getElementById("grid-" + handName);
                     if (!cell) continue;
                     
-                    // CORREÇÃO PROTEGIDA (NULL-SAFE): Se a posição for nula (ex: BB), assume FOLD sem estourar o código
+                    // CORREÇÃO DA LEITURA DE PROPRIEDADE DIRETA DO JSON (FIM DO BUG DO FOLD AUTOMÁTICO)
                     let action = "fold";
-                    if (positionData && positionData.hands && positionData.hands[handName]) {
-                        action = positionData.hands[handName].toLowerCase();
+                    if (positionData && positionData[handName]) {
+                        action = positionData[handName].toLowerCase();
                     }
                     
                     cell.className = "cell";
@@ -308,7 +305,6 @@
             }
         }
 
-        // NAVEGAÇÃO DE POSIÇÕES INSTANTÂNEA LOCAL (SEM DAR NOVOS FETCHS BUGADOS)
         function switchMatrixPositionView(targetPos) {
             matrixActivePosition = targetPos;
             renderMatrixColors();
@@ -399,7 +395,6 @@
 
             document.getElementById('tableStackMeta').innerText = "Buscando Estratégia " + currentStack + "...";
 
-            // DIVISÃO DINÂMICA COMPATÍVEL COM OS 4 ARQUIVOS JSON REAIS DO SEU GITHUB
             let targetJsonFile = "60BB.json"; 
             if (currentStack === "100BB" || currentStack === "90BB") {
                 targetJsonFile = "100BB.json";
@@ -410,6 +405,7 @@
             }
 
             try {
+                // Requisição limpa compatível com as rotas do Service Worker (sw.js)
                 const response = await fetch('./' + targetJsonFile);
                 currentLoadedGtoData = await response.json();
             } catch (error) {
@@ -433,8 +429,10 @@
 
             const positionData = currentLoadedGtoData ? currentLoadedGtoData[currentPosition] : null;
             let basicAction = "fold";
-            if (positionData && positionData.hands && positionData.hands[currentHand]) {
-                basicAction = positionData.hands[currentHand].toLowerCase();
+            
+            // CORREÇÃO DO MAPEAMENTO DO QUIZ (LÊ DIRETO O COMBO DO SEU JSON COMPLETO)
+            if (positionData && positionData[currentHand]) {
+                basicAction = positionData[currentHand].toLowerCase();
             }
 
             if (basicAction === "raise" && (currentStack === "10BB" || currentStack === "20BB")) {
