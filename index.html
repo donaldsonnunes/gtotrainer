@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTT GTO Quiz Trainer - Fixed Matrix Colors</title>
+    <title>MTT GTO Quiz Trainer - Fixed Matrix</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -89,7 +89,7 @@
         .feedback-correct { background-color: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid #4ade80; }
         .feedback-wrong { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
 
-        /* MATRIZ LATERAL (DRAWER) */
+        /* MATRIZ LATERAL */
         .matrix-panel { background-color: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: none; flex-direction: column; align-items: center; box-sizing: border-box; }
         .matrix-title { font-size: 1rem; color: #4ade80; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; }
         .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; width: min(90vw, 360px); height: min(90vw, 360px); }
@@ -230,7 +230,6 @@
             }
         }
 
-        // CORREÇÃO MÁXIMA DA PINTURA: Converte e normaliza strings maiúsculas/minúsculas do JSON
         function renderMatrixColors() {
             if (!isPanelVisible || !currentLoadedGtoData) return; 
             
@@ -247,14 +246,14 @@
                     
                     let action = "fold";
                     if (positionData && positionData.hands && positionData.hands[handName]) {
-                        action = positionData.hands[handName].toLowerCase(); // Garante leitura minúscula homogênea
+                        action = positionData.hands[handName].toLowerCase();
                     }
                     
                     cell.className = "cell";
                     if (handName === currentHand) cell.classList.add('cell-active-hand');
 
                     if (action === "raise") {
-                        cell.style.backgroundColor = (currentStack === "10BB") ? "#b91c1c" : "#f97316"; 
+                        cell.style.backgroundColor = (currentStack === "10BB" || currentStack === "20BB") ? "#b91c1c" : "#f97316"; 
                     } else if (action === "limp") {
                         cell.style.backgroundColor = "#3b82f6"; 
                     } else {
@@ -348,7 +347,7 @@
 
             document.getElementById('tableStackMeta').innerText = "Baixando Estratégia de " + currentStack + "...";
 
-            // CONFIGURAÇÃO DOS ARQUIVOS RELATIVOS DE FORMA SEGURA
+            // MAPEAMENTO CIRÚRGICO CORRIGIDO PARA EVITAR CACHE DE NAVEGADOR
             let targetJsonFile = "./60BB.json"; 
             if (currentStack === "10BB") {
                 targetJsonFile = "./10BB.json";
@@ -357,7 +356,6 @@
             }
 
             try {
-                // Adiciona um parâmetro timestamp dinâmico (?v=...) para limpar o cache do navegador e forçar o download atualizado
                 const response = await fetch(targetJsonFile + "?v=" + new Date().getTime());
                 currentLoadedGtoData = await response.json();
             } catch (error) {
@@ -369,7 +367,7 @@
             drawVisualCards(currentHand);
             refreshPokerTableGraph();
 
-            if (currentStack === "10BB") {
+            if (currentStack === "10BB" || currentStack === "20BB") {
                 document.getElementById('btnRaise').style.display = "none";
                 document.getElementById('btnAllin').style.display = "inline-block";
                 document.getElementById('btnLimp').style.display = "none";
@@ -385,7 +383,7 @@
                 basicAction = positionData.hands[currentHand].toLowerCase();
             }
 
-            if (basicAction === "raise" && currentStack === "10BB") {
+            if (basicAction === "raise" && (currentStack === "10BB" || currentStack === "20BB")) {
                 correctGtoAction = "allin";
             } else {
                 correctGtoAction = basicAction;
