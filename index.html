@@ -1,86 +1,17 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <title>MTT GTO Quiz Trainer</title>
-    <style>
-        body { font-family: sans-serif; background-color: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .box { background: #1e293b; padding: 20px; border-radius: 8px; text-align: center; width: 300px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        button { padding: 12px 25px; cursor: pointer; margin: 5px; font-weight: bold; border-radius: 5px; border: none; }
-        .btn-raise { background: #f97316; color: white; }
-        .btn-fold { background: #4b5563; color: white; }
-        #debug { font-size: 11px; color: #fbbf24; margin-top: 15px; }
-        .stats { margin-top: 15px; color: #94a3b8; }
-    </style>
-</head>
-<body>
-    <h1>Quiz GTO</h1>
-    <div class="box">
-        <p>Stack: <span id="stackDisplay">--</span> | Pos: <span id="posDisplay">--</span></p>
-        <p>Mão: <strong id="handDisplay" style="font-size: 1.5rem;">--</strong></p>
-        
-        <button class="btn-raise" onclick="check('raise')">Raise</button>
-        <button class="btn-fold" onclick="check('fold')">Fold</button>
-        
-        <p id="result" style="font-weight: bold; margin-top: 15px;"></p>
-        <div class="stats">Acertos: <span id="score">0</span> / <span id="total">0</span></div>
-        <p id="debug">Carregando...</p>
-    </div>
-
-    <script>
-        let db = {};
-        let currentPos = "", currentHand = "", currentStack = "100BB";
-        let total = 0, correct = 0;
-
-        async function init() {
-            try {
-                // Mantemos o nome do arquivo fixo para testes. Pode trocar por "./100bb.json"
-                const res = await fetch('./100bb.json'); 
-                db = await res.json();
-                document.getElementById('debug').innerText = "JSON carregado com sucesso!";
-            } catch(e) { 
-                document.getElementById('debug').innerText = "Erro ao carregar JSON."; 
-            }
-            next();
-        }
-
-        function next() {
-            const positions = ["UTG", "UTG1", "UTG2", "MP", "HJ", "CO", "BTN", "SB"];
-            currentPos = positions[Math.floor(Math.random() * positions.length)];
-            
-            // Garantir que a posição exista no JSON para evitar erros
-            if (!db[currentPos]) return next(); 
-
-            const hands = Object.keys(db[currentPos].hands);
-            // Sorteia uma mão do JSON ou uma mão aleatória para testar o Fold
-            currentHand = Math.random() > 0.5 ? hands[Math.floor(Math.random() * hands.length)] : "72o";
-            
-            document.getElementById('stackDisplay').innerText = currentStack;
-            document.getElementById('posDisplay').innerText = currentPos;
-            document.getElementById('handDisplay').innerText = currentHand;
-            document.getElementById('result').innerText = "";
-        }
-
-        function check(action) {
-            let posData = db[currentPos].hands;
-            let correctAction = (posData && posData[currentHand]) ? posData[currentHand].toLowerCase() : "fold";
-            
-            total++;
-            if (action === correctAction) {
-                correct++;
-                document.getElementById('result').style.color = "#4ade80";
-                document.getElementById('result').innerText = "✅ Acertou! É " + correctAction.toUpperCase();
-            } else {
-                document.getElementById('result').style.color = "#ef4444";
-                document.getElementById('result').innerText = "❌ Errou. O correto era " + correctAction.toUpperCase();
-            }
-            
-            document.getElementById('total').innerText = total;
-            document.getElementById('score').innerText = correct;
-            setTimeout(next, 1200);
-        }
-
-        init();
-    </script>
-</body>
-</html>
+async function init() {
+    // Sorteia stack para o cenário
+    currentStack = stacks[Math.floor(Math.random() * stacks.length)];
+    
+    // Define arquivo baseado no stack
+    let file = "60bb.json";
+    if (["100BB", "90BB"].includes(currentStack)) file = "100bb.json";
+    else if (["40BB", "30BB"].includes(currentStack)) file = "30bb.json";
+    else if (["20BB", "10BB"].includes(currentStack)) file = "20bb.json";
+    
+    try {
+        const res = await fetch('./' + file);
+        db = await res.json();
+        document.getElementById('debug').innerText = "JSON " + file + " carregado.";
+    } catch(e) { document.getElementById('debug').innerText = "Erro ao carregar JSON."; }
+    next();
+}
