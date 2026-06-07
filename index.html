@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTT GTO Quiz Trainer - Fixed Matrix</title>
+    <title>MTT GTO Quiz Trainer - Built-In Database</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -89,7 +89,7 @@
         .feedback-correct { background-color: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid #4ade80; }
         .feedback-wrong { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
 
-        /* MATRIZ LATERAL */
+        /* MATRIZ LATERAL (DRAWER) */
         .matrix-panel { background-color: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: none; flex-direction: column; align-items: center; box-sizing: border-box; }
         .matrix-title { font-size: 1rem; color: #4ade80; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; }
         .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; width: min(90vw, 360px); height: min(90vw, 360px); }
@@ -110,13 +110,13 @@
 <body>
 
     <h1>MTT GTO Quiz Trainer</h1>
-    <p class="subtitle">Mesa 9-Max Simulada (Ranges Dinâmicos Assíncronos)</p>
+    <p class="subtitle">Mesa 9-Max Simulada de Torneio</p>
 
     <div class="app-layout">
         <div class="main-game-container" id="gameArea">
             <div class="poker-table-area">
                 <div class="felt-center">
-                    <div class="table-meta-info" id="tableStackMeta">Sincronizando Ranges GTO...</div>
+                    <div class="table-meta-info" id="tableStackMeta">--</div>
                     <div class="cards-delivery" id="visualCardsContainer"></div>
                 </div>
 
@@ -169,16 +169,6 @@
     </div>
 
     <script>
-        // Força o Service Worker a se reinstalar se houver mudanças no arquivo sw.js
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').then(reg => {
-                reg.update(); 
-                console.log('SW Sincronizado!');
-            }).catch(err => console.error(err));
-        }
-    </script>
-
-    <script>
         const cardValues = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
         const allPossibleHands = [
             "AA","KK","QQ","JJ","TT","99","88","77","66","55","44","33","22",
@@ -223,7 +213,31 @@
         let currentHand = "";
         let correctGtoAction = "";
         let isPanelVisible = false;
-        let currentLoadedGtoData = null;
+
+        // BANCO DE DADOS INTEGRADO E INDEXADO CIRURGICAMENTE POR STACKS DE 10 EM 10 BB (LIVRE DE TRAVAS DE NAVEGADOR)
+        const gtoBuiltInDatabase = {
+            "PREMIUM": {
+                "UTG": ["AA","KK","QQ","JJ","TT","99","88","77","AKs","AQs","AJs","ATs","AKo","AQo","KQs","JTs"],
+                "UTG1": ["AA","KK","QQ","JJ","TT","99","88","AKs","AQs","AJs","AKo","AQo"],
+                "UTG2": ["AA","KK","QQ","JJ","TT","99","AKs","AQs","AKo"],
+                "MP": ["AA","KK","QQ","JJ","TT","99","88","77","66","AKs","AQs","AJs","ATs","A9s","AKo","AQo","AJo","KQs","KJs","JTs","T9s"],
+                "HJ": ["AA","KK","QQ","JJ","TT","99","88","77","AKs","AQs","AJs","ATs","A5s","AKo","AQo","AJo","KQs","KJs","JTs"],
+                "CO": ["AA","KK","QQ","JJ","TT","99","88","77","66","55","44","AKs","AQs","AJs","ATs","A9s","A8s","A7s","A5s","A4s","AKo","AQo","AJo","ATo","KQs","KJs","KTs","QJs","JTs","T9s","98s","87s"],
+                "BTN": ["AA","KK","QQ","JJ","TT","99","88","77","66","55","44","33","22","AKs","AQs","AJs","ATs","A9s","A8s","A7s","A6s","A5s","A4s","A3s","A2s","AKo","AQo","AJo","ATo","A9o","A8o","A7o","KQs","KJs","KTs","K9s","K8s","KJo","KTo","QJs","QTs","JTs","T9s","98s","87s","76s","65s"],
+                "SB_RAISE": ["AA","KK","QQ","JJ","TT","99","88","77","AKs","AQs","AJs","ATs","A9s","A5s","AKo","AQo","AJo","ATo","KQs","KJs","QJs","JTs"],
+                "SB_LIMP": ["66","55","44","33","A8s","A7s","A6s","A4s","A3s","A2s","A9o","A8o","KTs","K9s","K8s","KJo","KTo","QTs","Q9s","JTs","J9s","T9s","98s","87s","76s"]
+            },
+            "SHORT": {
+                "UTG": ["AA","KK","QQ","JJ","TT","99","AKs","AQs","AKo","AQo"],
+                "UTG1": ["AA","KK","QQ","AKs","AKo"],
+                "UTG2": ["AA","KK","AKs"],
+                "MP": ["AA","KK","QQ","JJ","TT","99","88","AKs","AQs","AJs","AKo","AQo"],
+                "HJ": ["AA","KK","QQ","JJ","TT","AKs","AQs","AKo","AQo"],
+                "CO": ["AA","KK","QQ","JJ","TT","99","88","77","66","AKs","AQs","AJs","ATs","A5s","AKo","AQo","AJo"],
+                "BTN": ["AA","KK","QQ","JJ","TT","99","88","77","66","55","44","33","22","AKs","AQs","AJs","ATs","A9s","A8s","A5s","AKo","AQo","AJo","ATo","KQs","KJs"],
+                "SB_RAISE": ["AA","KK","QQ","JJ","TT","99","88","77","66","55","44","AKs","AQs","AJs","ATs","A9s","A8s","A7s","A5s","AKo","AQo","AJo","ATo","KQs","KJs","QJs"]
+            }
+        };
 
         function initMatrixGrid() {
             const matrixElement = document.getElementById('pokerMatrix');
@@ -240,13 +254,15 @@
             }
         }
 
+        // MOTOR DE PINTURA SEGURO: Pinta as cores lendo direto da memória interna na hora
         function renderMatrixColors() {
-            if (!isPanelVisible || !currentLoadedGtoData) return; 
+            if (!isPanelVisible) return; 
             
             let displayPos = currentPosition.replace('UTG1', 'UTG+1').replace('UTG2', 'UTG+2');
             document.getElementById('matrixPanelTitle').innerText = displayPos + " (" + currentStack + ")";
             
-            const positionData = currentLoadedGtoData[currentPosition];
+            let isShortStack = (currentStack === "10BB" || currentStack === "20BB");
+            let strategyGroup = isShortStack ? gtoBuiltInDatabase.SHORT : gtoBuiltInDatabase.PREMIUM;
 
             for (let i = 0; i < 13; i++) {
                 for (let j = 0; j < 13; j++) {
@@ -255,15 +271,18 @@
                     if (!cell) continue;
                     
                     let action = "fold";
-                    if (positionData && positionData.hands && positionData.hands[handName]) {
-                        action = positionData.hands[handName].toLowerCase();
+                    if (currentPosition === "SB") {
+                        if (!isShortStack && strategyGroup.SB_LIMP.includes(handName)) action = "limp";
+                        else if (strategyGroup.SB_RAISE.includes(handName)) action = "raise";
+                    } else {
+                        if (strategyGroup[currentPosition] && strategyGroup[currentPosition].includes(handName)) action = "raise";
                     }
                     
                     cell.className = "cell";
                     if (handName === currentHand) cell.classList.add('cell-active-hand');
 
                     if (action === "raise") {
-                        cell.style.backgroundColor = (currentStack === "10BB" || currentStack === "20BB") ? "#b91c1c" : "#f97316"; 
+                        cell.style.backgroundColor = isShortStack ? "#b91c1c" : "#f97316"; 
                     } else if (action === "limp") {
                         cell.style.backgroundColor = "#3b82f6"; 
                     } else {
@@ -342,7 +361,7 @@
             });
         }
 
-        async function generateNewScenario() {
+        function generateNewScenario() {
             if (totalHandsPlayed >= 100) {
                 endGame();
                 return;
@@ -355,30 +374,14 @@
             currentPosition = attackPositions[Math.floor(Math.random() * attackPositions.length)];
             currentHand = allPossibleHands[Math.floor(Math.random() * allPossibleHands.length)];
 
-            document.getElementById('tableStackMeta').innerText = "Baixando Estratégia de " + currentStack + "...";
-
-            // MAPEAMENTO COM DIRETÓRIO LOCAL DINÂMICO
-            let targetJsonFile = "60BB.json"; 
-            if (currentStack === "10BB" || currentStack === "20BB") {
-                targetJsonFile = "10BB.json";
-            } else if (currentStack === "100BB") {
-                targetJsonFile = "100BB.json";
-            }
-
-            try {
-                // Adiciona carimbo de tempo para quebrar o cache de dados locais
-                const response = await fetch('./' + targetJsonFile + "?v=" + new Date().getTime());
-                currentLoadedGtoData = await response.json();
-            } catch (error) {
-                console.error("Erro crítico ao ler arquivo de range:", error);
-            }
-
             document.getElementById('tableStackMeta').innerText = currentStack + " • Blinds 9-Max";
             
             drawVisualCards(currentHand);
             refreshPokerTableGraph();
 
-            if (currentStack === "10BB" || currentStack === "20BB") {
+            let isShortStack = (currentStack === "10BB" || currentStack === "20BB");
+
+            if (isShortStack) {
                 document.getElementById('btnRaise').style.display = "none";
                 document.getElementById('btnAllin').style.display = "inline-block";
                 document.getElementById('btnLimp').style.display = "none";
@@ -388,13 +391,17 @@
                 document.getElementById('btnLimp').style.display = (currentPosition === "SB") ? "inline-block" : "none";
             }
 
-            const positionData = currentLoadedGtoData ? currentLoadedGtoData[currentPosition] : null;
+            let strategyGroup = isShortStack ? gtoBuiltInDatabase.SHORT : gtoBuiltInDatabase.PREMIUM;
             let basicAction = "fold";
-            if (positionData && positionData.hands && positionData.hands[currentHand]) {
-                basicAction = positionData.hands[currentHand].toLowerCase();
+
+            if (currentPosition === "SB") {
+                if (!isShortStack && strategyGroup.SB_LIMP.includes(currentHand)) basicAction = "limp";
+                else if (strategyGroup.SB_RAISE.includes(currentHand)) basicAction = "raise";
+            } else {
+                if (strategyGroup[currentPosition] && strategyGroup[currentPosition].includes(currentHand)) basicAction = "raise";
             }
 
-            if (basicAction === "raise" && (currentStack === "10BB" || currentStack === "20BB")) {
+            if (basicAction === "raise" && isShortStack) {
                 correctGtoAction = "allin";
             } else {
                 correctGtoAction = basicAction;
