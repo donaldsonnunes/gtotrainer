@@ -1,17 +1,67 @@
-async function init() {
-    // Sorteia stack para o cenário
-    currentStack = stacks[Math.floor(Math.random() * stacks.length)];
-    
-    // Define arquivo baseado no stack
-    let file = "60bb.json";
-    if (["100BB", "90BB"].includes(currentStack)) file = "100bb.json";
-    else if (["40BB", "30BB"].includes(currentStack)) file = "30bb.json";
-    else if (["20BB", "10BB"].includes(currentStack)) file = "20bb.json";
-    
-    try {
-        const res = await fetch('./' + file);
-        db = await res.json();
-        document.getElementById('debug').innerText = "JSON " + file + " carregado.";
-    } catch(e) { document.getElementById('debug').innerText = "Erro ao carregar JSON."; }
-    next();
-}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz GTO</title>
+    <style>
+        body { font-family: sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .box { background: #1e293b; padding: 20px; border-radius: 8px; text-align: center; width: 300px; }
+        button { padding: 15px; cursor: pointer; margin: 5px; border-radius: 5px; border: none; }
+    </style>
+</head>
+<body>
+    <h1>Quiz GTO</h1>
+    <div class="box">
+        <p>Stack: <span id="stack">--</span> | Pos: <span id="pos">--</span></p>
+        <p>Mão: <strong id="hand">--</strong></p>
+        <button onclick="check('raise')">Raise</button>
+        <button onclick="check('fold')">Fold</button>
+        <p id="result"></p>
+        <p id="debug" style="font-size:10px; color:yellow;"></p>
+    </div>
+
+    <script>
+        const handsList = ["AA","KK","QQ","JJ","TT","99","AKs","AQs","AKo"];
+        let db = {};
+        let currentPos = "UTG", currentHand = "AA", currentStack = "100BB";
+
+        async function init() {
+            try {
+                // Tenta carregar o JSON principal
+                const res = await fetch('./100bb.json'); 
+                db = await res.json();
+                document.getElementById('debug').innerText = "JSON carregado.";
+            } catch(e) { 
+                document.getElementById('debug').innerText = "Erro ao carregar JSON."; 
+            }
+            next();
+        }
+
+        function next() {
+            currentHand = handsList[Math.floor(Math.random() * handsList.length)];
+            document.getElementById('stack').innerText = currentStack;
+            document.getElementById('pos').innerText = currentPos;
+            document.getElementById('hand').innerText = currentHand;
+            document.getElementById('result').innerText = "";
+        }
+
+        function check(action) {
+            let correct = "fold";
+            // Acesso protegido: verifica se o objeto 'hands' existe antes de acessar
+            if (db[currentPos] && db[currentPos].hands && db[currentPos].hands[currentHand]) {
+                correct = db[currentPos].hands[currentHand].toLowerCase();
+            }
+            
+            if (action === correct) {
+                document.getElementById('result').innerText = "✅ Correto! É " + correct;
+            } else {
+                document.getElementById('result').innerText = "❌ Errou. O correto era " + correct;
+            }
+            setTimeout(next, 1000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
