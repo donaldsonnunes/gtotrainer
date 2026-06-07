@@ -287,7 +287,6 @@
                     const cell = document.getElementById("grid-" + handName);
                     if (!cell) continue;
                     
-                    // CORREÇÃO PROTEGIDA (NULL-SAFE): Se o nó for vazio (ex: BB), assume fold sem estourar erro
                     let action = "fold";
                     if (positionData && positionData.hands && positionData.hands[handName]) {
                         action = positionData.hands[handName].toLowerCase();
@@ -309,6 +308,7 @@
             }
         }
 
+        // NOVO FILTRO LOCAL ASSÍNCRONO CORRIGIDO: Altera a aba sem disparar requisições pesadas da web
         function switchMatrixPositionView(targetPos) {
             matrixActivePosition = targetPos;
             renderMatrixColors();
@@ -408,8 +408,9 @@
                 targetJsonFile = "20BB.json";
             }
 
+            // CORREÇÃO DE URL DA API FETCH: Sem parâmetros dinâmicos para respeitar o Cache do sw.js offline
             try {
-                const response = await fetch('./' + targetJsonFile + "?v=" + new Date().getTime());
+                const response = await fetch('./' + targetJsonFile);
                 currentLoadedGtoData = await response.json();
             } catch (error) {
                 console.error("Erro ao carregar JSON:", error);
