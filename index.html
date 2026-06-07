@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTT GTO Quiz Trainer - Fixed Matrix</title>
+    <title>MTT GTO Quiz Trainer - Fixed Matrix Colors</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -48,7 +48,7 @@
         .card-black { color: #1e293b; }
         .card-suit-bottom { align-self: flex-end; font-size: 1rem; }
 
-        /* ASSENTOS JOGADORES */
+        /* ASSENTOS */
         .player-seat {
             position: absolute; background-color: #1e293b; border: 2px solid #475569; border-radius: 8px;
             padding: 6px 10px; font-size: 0.75rem; font-weight: bold; text-align: center; width: 78px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s; z-index: 2;
@@ -57,7 +57,6 @@
         .seat-status { color: #94a3b8; font-size: 0.65rem; margin-top: 2px; }
         .hero-active-seat .seat-status { color: #4ade80; }
 
-        /* Coordenadas Horárias Fixas */
         .seat-0 { top: 30px; left: 15px; }     
         .seat-1 { top: -5px; left: 43%; }      
         .seat-2 { top: 30px; right: 15px; }    
@@ -197,8 +196,6 @@
         ];
 
         const stacksList = ["100BB", "90BB", "80BB", "70BB", "60BB", "50BB", "40BB", "30BB", "20BB", "10BB"];
-        
-        // Padrão interno cronológico seguro para o JS conversar com o JSON
         const positionsChronological = ["UTG", "UTG1", "UTG2", "MP", "HJ", "CO", "BTN", "SB", "BB"];
 
         const seatIdsMapping = {
@@ -233,11 +230,10 @@
             }
         }
 
-        // CORREÇÃO CIRÚRGICA: Mapeia e pinta as cores vindas do JSON sem travar
+        // CORREÇÃO MÁXIMA DA PINTURA: Converte e normaliza strings maiúsculas/minúsculas do JSON
         function renderMatrixColors() {
             if (!isPanelVisible || !currentLoadedGtoData) return; 
             
-            // Converte visualmente o nome no topo do Drawer lateral para o usuário ver o "+"
             let displayPos = currentPosition.replace('UTG1', 'UTG+1').replace('UTG2', 'UTG+2');
             document.getElementById('matrixPanelTitle').innerText = displayPos + " (" + currentStack + ")";
             
@@ -249,8 +245,11 @@
                     const cell = document.getElementById("grid-" + handName);
                     if (!cell) continue;
                     
-                    // Busca segura: se os dados da posição não existirem no arquivo baixado, assume fold
-                    const action = (positionData && positionData.hands) ? positionData.hands[handName] : "fold";
+                    let action = "fold";
+                    if (positionData && positionData.hands && positionData.hands[handName]) {
+                        action = positionData.hands[handName].toLowerCase(); // Garante leitura minúscula homogênea
+                    }
+                    
                     cell.className = "cell";
                     if (handName === currentHand) cell.classList.add('cell-active-hand');
 
@@ -319,8 +318,6 @@
                 if (!seatElement) return;
                 
                 seatElement.className = "player-seat " + seatElement.className.split(' ').filter(c => c.startsWith('seat-')).join(' ');
-                
-                // Traduz o nome da tag visual para o usuário ver UTG+1 / UTG+2 na mesa gráfica
                 let cleanLabelName = pos.replace('UTG1', 'UTG+1').replace('UTG2', 'UTG+2');
 
                 if (pos === currentPosition) {
@@ -351,16 +348,17 @@
 
             document.getElementById('tableStackMeta').innerText = "Baixando Estratégia de " + currentStack + "...";
 
-            // MAPEAMENTO CORRETO DOS ARQUIVOS EXTERNOS JSON DO SEU REPOSITÓRIO
-            let targetJsonFile = "60BB.json"; 
+            // CONFIGURAÇÃO DOS ARQUIVOS RELATIVOS DE FORMA SEGURA
+            let targetJsonFile = "./60BB.json"; 
             if (currentStack === "10BB") {
-                targetJsonFile = "10BB.json";
+                targetJsonFile = "./10BB.json";
             } else if (currentStack === "100BB") {
-                targetJsonFile = "100BB.json";
+                targetJsonFile = "./100BB.json";
             }
 
             try {
-                const response = await fetch(targetJsonFile);
+                // Adiciona um parâmetro timestamp dinâmico (?v=...) para limpar o cache do navegador e forçar o download atualizado
+                const response = await fetch(targetJsonFile + "?v=" + new Date().getTime());
                 currentLoadedGtoData = await response.json();
             } catch (error) {
                 console.error("Erro crítico ao ler arquivo de range:", error);
@@ -382,8 +380,10 @@
             }
 
             const positionData = currentLoadedGtoData ? currentLoadedGtoData[currentPosition] : null;
-            const databaseTarget = (positionData && positionData.hands) ? positionData.hands[currentHand] : "fold";
-            let basicAction = databaseTarget ? databaseTarget : "fold";
+            let basicAction = "fold";
+            if (positionData && positionData.hands && positionData.hands[currentHand]) {
+                basicAction = positionData.hands[currentHand].toLowerCase();
+            }
 
             if (basicAction === "raise" && currentStack === "10BB") {
                 correctGtoAction = "allin";
