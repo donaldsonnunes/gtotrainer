@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTT GTO Quiz Trainer - Async JSON Fixed</title>
+    <title>MTT GTO Quiz Trainer - Professional JSON Fixed</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -98,7 +98,7 @@
         }
         .btn-select-pos {
             background-color: #334155; color: #94a3b8; border: 1px solid #475569; padding: 7px 2px;
-            font-size: 0.7rem; font-weight: bold; border-radius: 4px; cursor: pointer; text-align: center; transition: all 0.2s;
+            font-size: 0.7 ounce; font-weight: bold; border-radius: 4px; cursor: pointer; text-align: center; transition: all 0.2s;
         }
         .btn-select-pos.active-filter {
             background-color: #10b981; color: #ffffff; border-color: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
@@ -109,20 +109,12 @@
         .cell-active-hand { outline: 2px solid #fbbf24; box-shadow: 0 0 10px #fbbf24; z-index: 10; }
 
         .btn-close-matrix { display: block; background-color: #ef4444; color: white; padding: 12px; font-size: 1rem; border: none; border-radius: 6px; cursor: pointer; margin-top: 15px; font-weight: bold; width: 100%; max-width: 360px; }
-
-        @media (max-width: 768px) {
-            .app-layout { flex-direction: column; align-items: center; }
-            .matrix-panel { position: fixed; top: 0; right: -100%; width: 100vw; height: 100vh; z-index: 999; border-radius: 0; justify-content: center; transition: right 0.25s ease-in-out; }
-            .matrix-panel.active { display: flex !important; right: 0; }
-        }
-        @media (min-width: 769px) { .matrix-panel.active { display: flex !important; } }
-        .summary-container { text-align: center; padding: 30px; background-color: #1e293b; border-radius: 12px; display: none; max-width: 500px; }
     </style>
 </head>
 <body>
 
     <h1>MTT GTO Quiz Trainer</h1>
-    <p class="subtitle">Mesa 9-Max Simulada (Ranges Dinâmicos JSON)</p>
+    <p class="subtitle">Mesa 9-Max Simulada (Carregamento Assíncrono Dinâmico JSON)</p>
 
     <div class="app-layout">
         <div class="main-game-container" id="gameArea">
@@ -283,10 +275,10 @@
                     const cell = document.getElementById("grid-" + handName);
                     if (!cell) continue;
                     
-                    // CORREÇÃO DA LEITURA DE PROPRIEDADE DIRETA DO JSON (FIM DO BUG DO FOLD AUTOMÁTICO)
+                    // CORRIGIDO: Retorna o mapeamento do nó estruturado .hands do seu JSON de forma segura (Null-Safe)
                     let action = "fold";
-                    if (positionData && positionData[handName]) {
-                        action = positionData[handName].toLowerCase();
+                    if (positionData && positionData.hands && positionData.hands[handName]) {
+                        action = positionData.hands[handName].toLowerCase();
                     }
                     
                     cell.className = "cell";
@@ -405,7 +397,6 @@
             }
 
             try {
-                // Requisição limpa compatível com as rotas do Service Worker (sw.js)
                 const response = await fetch('./' + targetJsonFile);
                 currentLoadedGtoData = await response.json();
             } catch (error) {
@@ -430,9 +421,9 @@
             const positionData = currentLoadedGtoData ? currentLoadedGtoData[currentPosition] : null;
             let basicAction = "fold";
             
-            // CORREÇÃO DO MAPEAMENTO DO QUIZ (LÊ DIRETO O COMBO DO SEU JSON COMPLETO)
-            if (positionData && positionData[currentHand]) {
-                basicAction = positionData[currentHand].toLowerCase();
+            // CORRIGIDO: Valida os acertos no Quiz interpretando corretamente a ramificação .hands do seu JSON
+            if (positionData && positionData.hands && positionData.hands[currentHand]) {
+                basicAction = positionData.hands[currentHand].toLowerCase();
             }
 
             if (basicAction === "raise" && (currentStack === "10BB" || currentStack === "20BB")) {
