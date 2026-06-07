@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTT GTO Quiz Trainer - Built-In Database</title>
+    <title>MTT GTO Quiz Trainer - Fixed Logic</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -115,6 +115,7 @@
     <div class="app-layout">
         <div class="main-game-container" id="gameArea">
             <div class="poker-table-area">
+                
                 <div class="felt-center">
                     <div class="table-meta-info" id="tableStackMeta">--</div>
                     <div class="cards-delivery" id="visualCardsContainer"></div>
@@ -214,28 +215,27 @@
         let correctGtoAction = "";
         let isPanelVisible = false;
 
-        // BANCO DE DADOS INTEGRADO E INDEXADO CIRURGICAMENTE POR STACKS DE 10 EM 10 BB (LIVRE DE TRAVAS DE NAVEGADOR)
+        // BANCO DE DADOS INTEGRADO EM OBJETOS MAPEADOS (LIVRE DE BUG DE LEITURA E ERRO DE TEXTO)
         const gtoBuiltInDatabase = {
             "PREMIUM": {
-                "UTG": ["AA","KK","QQ","JJ","TT","99","88","77","AKs","AQs","AJs","ATs","AKo","AQo","KQs","JTs"],
-                "UTG1": ["AA","KK","QQ","JJ","TT","99","88","AKs","AQs","AJs","AKo","AQo"],
-                "UTG2": ["AA","KK","QQ","JJ","TT","99","AKs","AQs","AKo"],
-                "MP": ["AA","KK","QQ","JJ","TT","99","88","77","66","AKs","AQs","AJs","ATs","A9s","AKo","AQo","AJo","KQs","KJs","JTs","T9s"],
-                "HJ": ["AA","KK","QQ","JJ","TT","99","88","77","AKs","AQs","AJs","ATs","A5s","AKo","AQo","AJo","KQs","KJs","JTs"],
-                "CO": ["AA","KK","QQ","JJ","TT","99","88","77","66","55","44","AKs","AQs","AJs","ATs","A9s","A8s","A7s","A5s","A4s","AKo","AQo","AJo","ATo","KQs","KJs","KTs","QJs","JTs","T9s","98s","87s"],
-                "BTN": ["AA","KK","QQ","JJ","TT","99","88","77","66","55","44","33","22","AKs","AQs","AJs","ATs","A9s","A8s","A7s","A6s","A5s","A4s","A3s","A2s","AKo","AQo","AJo","ATo","A9o","A8o","A7o","KQs","KJs","KTs","K9s","K8s","KJo","KTo","QJs","QTs","JTs","T9s","98s","87s","76s","65s"],
-                "SB_RAISE": ["AA","KK","QQ","JJ","TT","99","88","77","AKs","AQs","AJs","ATs","A9s","A5s","AKo","AQo","AJo","ATo","KQs","KJs","QJs","JTs"],
-                "SB_LIMP": ["66","55","44","33","A8s","A7s","A6s","A4s","A3s","A2s","A9o","A8o","KTs","K9s","K8s","KJo","KTo","QTs","Q9s","JTs","J9s","T9s","98s","87s","76s"]
+                "UTG": {"AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","AKo":"raise","AQo":"raise","KQs":"raise","JTs":"raise"},
+                "UTG1": {"AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise"},
+                "UTG2": {"AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AKo":"raise"},
+                "MP": {"AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","JTs":"raise","T9s":"raise"},
+                "HJ": {"AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","KQs":"raise","KJs":"raise","JTs":"raise"},
+                "CO": {"AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","A4s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","KTs":"raise","QJs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise"},
+                "BTN": {"AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A6s":"raise","A5s":"raise","A4s":"raise","A3s":"raise","A2s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","A9o":"raise","A8o":"raise","A7o":"raise","KQs":"raise","KJs":"raise","KTs":"raise","K9s":"raise","K8s":"raise","KJo":"raise","KTo":"raise","QJs":"raise","QTs":"raise","JTs":"raise","T9s":"raise","98s":"raise","87s":"raise","76s":"raise","65s":"raise"},
+                "SB": {"AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","QJs":"raise","JTs":"raise","66":"limp","55":"limp","44":"limp","33":"limp","A8s":"limp","A7s":"limp","A6s":"limp","A4s":"limp","A3s":"limp","A2s":"limp","A9o":"limp","A8o":"limp","KTs":"limp","K9s":"limp","K8s":"limp","KJo":"limp","KTo":"limp","QTs":"limp","Q9s":"limp","J9s":"limp","T9s":"limp","98s":"limp","87s":"limp","76s":"limp"}
             },
             "SHORT": {
-                "UTG": ["AA","KK","QQ","JJ","TT","99","AKs","AQs","AKo","AQo"],
-                "UTG1": ["AA","KK","QQ","AKs","AKo"],
-                "UTG2": ["AA","KK","AKs"],
-                "MP": ["AA","KK","QQ","JJ","TT","99","88","AKs","AQs","AJs","AKo","AQo"],
-                "HJ": ["AA","KK","QQ","JJ","TT","AKs","AQs","AKo","AQo"],
-                "CO": ["AA","KK","QQ","JJ","TT","99","88","77","66","AKs","AQs","AJs","ATs","A5s","AKo","AQo","AJo"],
-                "BTN": ["AA","KK","QQ","JJ","TT","99","88","77","66","55","44","33","22","AKs","AQs","AJs","ATs","A9s","A8s","A5s","AKo","AQo","AJo","ATo","KQs","KJs"],
-                "SB_RAISE": ["AA","KK","QQ","JJ","TT","99","88","77","66","55","44","AKs","AQs","AJs","ATs","A9s","A8s","A7s","A5s","AKo","AQo","AJo","ATo","KQs","KJs","QJs"]
+                "UTG": {"AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","AKs":"raise","AQs":"raise","AKo":"raise","AQo":"raise"},
+                "UTG1": {"AA":"raise","KK":"raise","QQ":"raise","AKs":"raise","AKo":"raise"},
+                "UTG2": {"AA":"raise","KK":"raise","AKs":"raise"},
+                "MP": {"AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","AKs":"raise","AQs":"raise","AJs":"raise","AKo":"raise","AQo":"raise"},
+                "HJ": {"AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","AKs":"raise","AQs":"raise","AKo":"raise","AQo":"raise"},
+                "CO": {"AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise"},
+                "BTN": {"AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","33":"raise","22":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise"},
+                "SB": {"AA":"raise","KK":"raise","QQ":"raise","JJ":"raise","TT":"raise","99":"raise","88":"raise","77":"raise","66":"raise","55":"raise","44":"raise","AKs":"raise","AQs":"raise","AJs":"raise","ATs":"raise","A9s":"raise","A8s":"raise","A7s":"raise","A5s":"raise","AKo":"raise","AQo":"raise","AJo":"raise","ATo":"raise","KQs":"raise","KJs":"raise","QJs":"raise"}
             }
         };
 
@@ -254,7 +254,7 @@
             }
         }
 
-        // MOTOR DE PINTURA SEGURO: Pinta as cores lendo direto da memória interna na hora
+        // FUNÇÃO REESTRUTURADA: Varre as chaves de forma homogênea e pinta os blocos na hora
         function renderMatrixColors() {
             if (!isPanelVisible) return; 
             
@@ -263,6 +263,7 @@
             
             let isShortStack = (currentStack === "10BB" || currentStack === "20BB");
             let strategyGroup = isShortStack ? gtoBuiltInDatabase.SHORT : gtoBuiltInDatabase.PREMIUM;
+            const positionData = strategyGroup[currentPosition] || {};
 
             for (let i = 0; i < 13; i++) {
                 for (let j = 0; j < 13; j++) {
@@ -270,13 +271,7 @@
                     const cell = document.getElementById("grid-" + handName);
                     if (!cell) continue;
                     
-                    let action = "fold";
-                    if (currentPosition === "SB") {
-                        if (!isShortStack && strategyGroup.SB_LIMP.includes(handName)) action = "limp";
-                        else if (strategyGroup.SB_RAISE.includes(handName)) action = "raise";
-                    } else {
-                        if (strategyGroup[currentPosition] && strategyGroup[currentPosition].includes(handName)) action = "raise";
-                    }
+                    let action = positionData[handName] || "fold";
                     
                     cell.className = "cell";
                     if (handName === currentHand) cell.classList.add('cell-active-hand');
@@ -392,14 +387,8 @@
             }
 
             let strategyGroup = isShortStack ? gtoBuiltInDatabase.SHORT : gtoBuiltInDatabase.PREMIUM;
-            let basicAction = "fold";
-
-            if (currentPosition === "SB") {
-                if (!isShortStack && strategyGroup.SB_LIMP.includes(currentHand)) basicAction = "limp";
-                else if (strategyGroup.SB_RAISE.includes(currentHand)) basicAction = "raise";
-            } else {
-                if (strategyGroup[currentPosition] && strategyGroup[currentPosition].includes(currentHand)) basicAction = "raise";
-            }
+            let positionData = strategyGroup[currentPosition] || {};
+            let basicAction = positionData[currentHand] || "fold";
 
             if (basicAction === "raise" && isShortStack) {
                 correctGtoAction = "allin";
