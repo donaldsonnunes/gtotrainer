@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTT GTO Quiz Trainer - Async JSON Version</title>
+    <title>MTT GTO Quiz Trainer - Fixed Matrix</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e293b">
@@ -48,7 +48,7 @@
         .card-black { color: #1e293b; }
         .card-suit-bottom { align-self: flex-end; font-size: 1rem; }
 
-        /* ASSENTOS */
+        /* ASSENTOS JOGADORES */
         .player-seat {
             position: absolute; background-color: #1e293b; border: 2px solid #475569; border-radius: 8px;
             padding: 6px 10px; font-size: 0.75rem; font-weight: bold; text-align: center; width: 78px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.3s; z-index: 2;
@@ -57,6 +57,7 @@
         .seat-status { color: #94a3b8; font-size: 0.65rem; margin-top: 2px; }
         .hero-active-seat .seat-status { color: #4ade80; }
 
+        /* Coordenadas Horárias Fixas */
         .seat-0 { top: 30px; left: 15px; }     
         .seat-1 { top: -5px; left: 43%; }      
         .seat-2 { top: 30px; right: 15px; }    
@@ -89,20 +90,19 @@
         .feedback-correct { background-color: rgba(74, 222, 128, 0.15); color: #4ade80; border: 1px solid #4ade80; }
         .feedback-wrong { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; }
 
-        /* MATRIZ LATERAL */
+        /* MATRIZ LATERAL (DRAWER) */
         .matrix-panel { background-color: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: none; flex-direction: column; align-items: center; box-sizing: border-box; }
         .matrix-title { font-size: 1rem; color: #4ade80; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; }
         .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; width: min(90vw, 360px); height: min(90vw, 360px); }
         .cell { background-color: #334155; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: clamp(0.55rem, 2.2vw, 0.65rem); font-weight: bold; color: #ffffff; user-select: none; }
         .cell-active-hand { outline: 2px solid #fbbf24; box-shadow: 0 0 10px #fbbf24; z-index: 10; }
 
-        .btn-close-matrix { display: none; background-color: #ef4444; color: white; padding: 12px; font-size: 1rem; border: none; border-radius: 6px; cursor: pointer; margin-top: 15px; font-weight: bold; width: 100%; }
+        .btn-close-matrix { display: block; background-color: #ef4444; color: white; padding: 12px; font-size: 1rem; border: none; border-radius: 6px; cursor: pointer; margin-top: 15px; font-weight: bold; width: 100%; max-width: 360px; }
 
         @media (max-width: 768px) {
             .app-layout { flex-direction: column; align-items: center; }
             .matrix-panel { position: fixed; top: 0; right: -100%; width: 100vw; height: 100vh; z-index: 999; border-radius: 0; justify-content: center; transition: right 0.25s ease-in-out; }
             .matrix-panel.active { display: flex !important; right: 0; }
-            .btn-close-matrix { display: block; }
         }
         @media (min-width: 769px) { .matrix-panel.active { display: flex !important; } }
         .summary-container { text-align: center; padding: 30px; background-color: #1e293b; border-radius: 12px; display: none; max-width: 500px; }
@@ -170,12 +170,6 @@
     </div>
 
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(err => console.error(err));
-        }
-    </script>
-
-    <script>
         const cardValues = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
         const allPossibleHands = [
             "AA","KK","QQ","JJ","TT","99","88","77","66","55","44","33","22",
@@ -203,6 +197,8 @@
         ];
 
         const stacksList = ["100BB", "90BB", "80BB", "70BB", "60BB", "50BB", "40BB", "30BB", "20BB", "10BB"];
+        
+        // Padrão interno cronológico seguro para o JS conversar com o JSON
         const positionsChronological = ["UTG", "UTG1", "UTG2", "MP", "HJ", "CO", "BTN", "SB", "BB"];
 
         const seatIdsMapping = {
@@ -216,11 +212,10 @@
         let totalHandsPlayed = 0;
         let correctAnswers = 0;
         let currentStack = "";
-        let currentPosition = "";
+        let currentPosition = ""; 
         let currentHand = "";
         let correctGtoAction = "";
         let isPanelVisible = false;
-        
         let currentLoadedGtoData = null;
 
         function initMatrixGrid() {
@@ -238,9 +233,11 @@
             }
         }
 
+        // CORREÇÃO CIRÚRGICA: Mapeia e pinta as cores vindas do JSON sem travar
         function renderMatrixColors() {
             if (!isPanelVisible || !currentLoadedGtoData) return; 
             
+            // Converte visualmente o nome no topo do Drawer lateral para o usuário ver o "+"
             let displayPos = currentPosition.replace('UTG1', 'UTG+1').replace('UTG2', 'UTG+2');
             document.getElementById('matrixPanelTitle').innerText = displayPos + " (" + currentStack + ")";
             
@@ -252,7 +249,7 @@
                     const cell = document.getElementById("grid-" + handName);
                     if (!cell) continue;
                     
-                    // Tratamento seguro: se os dados da posição não existirem no arquivo, assume fold
+                    // Busca segura: se os dados da posição não existirem no arquivo baixado, assume fold
                     const action = (positionData && positionData.hands) ? positionData.hands[handName] : "fold";
                     cell.className = "cell";
                     if (handName === currentHand) cell.classList.add('cell-active-hand');
@@ -322,6 +319,8 @@
                 if (!seatElement) return;
                 
                 seatElement.className = "player-seat " + seatElement.className.split(' ').filter(c => c.startsWith('seat-')).join(' ');
+                
+                // Traduz o nome da tag visual para o usuário ver UTG+1 / UTG+2 na mesa gráfica
                 let cleanLabelName = pos.replace('UTG1', 'UTG+1').replace('UTG2', 'UTG+2');
 
                 if (pos === currentPosition) {
@@ -352,7 +351,7 @@
 
             document.getElementById('tableStackMeta').innerText = "Baixando Estratégia de " + currentStack + "...";
 
-            // MAPEAMENTO SEGURO DE ARQUIVOS EXTERNOS
+            // MAPEAMENTO CORRETO DOS ARQUIVOS EXTERNOS JSON DO SEU REPOSITÓRIO
             let targetJsonFile = "60BB.json"; 
             if (currentStack === "10BB") {
                 targetJsonFile = "10BB.json";
