@@ -6,20 +6,27 @@
     <title>Pro GTO Trainer</title>
     <style>
         body { font-family: sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; }
-        .header { width: 100%; max-width: 350px; display: flex; justify-content: space-between; margin-bottom: 10px; }
-        .stack-badge { background: #f97316; padding: 4px 12px; border-radius: 6px; font-weight: bold; }
+        
+        .header-top { width: 100%; max-width: 350px; display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .stack-box { background: #d97706; padding: 5px 12px; border-radius: 4px; font-weight: 800; font-size: 0.9rem; }
         
         .table { width: 340px; height: 180px; background: #064e3b; border-radius: 100px; margin: 15px 0; border: 8px solid #334155; position: relative; }
-        .seat { position: absolute; background: #1e293b; padding: 3px 6px; border-radius: 4px; font-size: 8px; border: 1px solid #475569; color: #94a3b8; }
-        .active-seat { border: 1px solid #f97316; color: #f97316; font-weight: bold; background: #334155; }
+        .seat { position: absolute; background: #1e293b; padding: 3px 6px; border-radius: 3px; font-size: 8px; border: 1px solid #475569; color: #94a3b8; }
+        .active-seat { border: 1px solid #f97316; color: white; background: #374151; font-weight: bold; }
         .dealer-btn { position: absolute; width: 18px; height: 18px; background: white; color: black; border-radius: 50%; font-size: 9px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 1px solid #000; }
 
         .hand-container { display: flex; gap: 15px; margin: 20px 0; height: 100px; }
-        .card { width: 70px; height: 100px; background: white; color: black; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 5px; font-weight: bold; font-size: 1.5rem; }
-        .suit-big { font-size: 2.5rem; margin-top: -5px; }
+        .card { width: 70px; height: 100px; background: white; color: black; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 8px; font-weight: bold; font-size: 1.6rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .suit-big { font-size: 3rem; margin-top: -10px; }
         .red { color: #dc2626; }
         .black { color: #1e293b; }
-        
+
+        .actions-container { display: flex; gap: 10px; width: 100%; max-width: 350px; margin-top: 10px; }
+        .btn-action { flex: 1; padding: 18px 0; border: none; font-weight: 800; cursor: pointer; color: white; border-radius: 6px; font-size: 0.95rem; text-transform: uppercase; }
+        .btn-raise { background: #f97316; }
+        .btn-fold { background: #ef4444; }
+        .btn-matrix { background: #475569; }
+
         .matrix-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
         .matrix-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 1px; width: 340px; }
         .cell { background: #334155; padding: 4px 0; text-align: center; font-size: 7px; color: #94a3b8; }
@@ -29,9 +36,9 @@
 </head>
 <body>
 
-    <div class="header">
-        <div style="font-size: 0.8rem; color: #94a3b8;">Mãos: <span id="count">0</span>/100 | Acerto: <span id="perc">0</span>%</div>
-        <div class="stack-badge" id="stackText">--</div>
+    <div class="header-top">
+        <div style="font-size: 0.85rem; color: #94a3b8;">Mãos: <span id="count">0</span>/100 | Acerto: <span id="perc">0</span>%</div>
+        <div class="stack-box" id="stackText">--</div>
     </div>
 
     <div class="table" id="table">
@@ -49,23 +56,23 @@
 
     <div class="hand-container" id="visualCards"></div>
     
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; max-width: 350px;">
-        <button style="background: #f97316;" onclick="checkAction('raise')">RAISE</button>
-        <button style="background: #ef4444;" onclick="checkAction('fold')">FOLD</button>
-        <button style="background: #64748b;" onclick="toggleMatrix()">MATRIZ</button>
+    <div class="actions-container">
+        <button class="btn-action btn-raise" onclick="checkAction('raise')">RAISE</button>
+        <button class="btn-action btn-fold" onclick="checkAction('fold')">FOLD</button>
+        <button class="btn-action btn-matrix" onclick="toggleMatrix()">MATRIZ</button>
     </div>
     <p id="feedback" style="font-weight:bold; height:20px;"></p>
 
     <div class="matrix-overlay" id="matrixOverlay">
         <div class="matrix-grid" id="matrixGrid"></div>
-        <button style="margin-top:20px; width: 340px; background:#ef4444;" onclick="toggleMatrix()">FECHAR</button>
+        <button style="margin-top:20px; width: 340px; padding: 15px; border:none; background:#ef4444; color:white; font-weight:bold;" onclick="toggleMatrix()">FECHAR</button>
     </div>
 
     <script>
         const cardValues = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
         const suits = [{s:'♠',c:'black'},{s:'♣',c:'black'},{s:'♥',c:'red'},{s:'♦',c:'red'}];
         const stacks = ["100bb", "60bb", "30bb", "20bb"];
-        let db = {}, handPool = [], handsCount = 0, hits = 0, currentHand = "", currentPos = "", currentStack = "";
+        let db = {}, handPool = [], handsCount = 0, hits = 0, currentHand = "", currentPos = "";
 
         function shuffleHands() {
             let h = [];
@@ -77,23 +84,20 @@
             if(handsCount >= 100) { alert("Treino Finalizado!"); handsCount=0; hits=0; }
             if(handPool.length === 0) handPool = shuffleHands();
             currentHand = handPool.pop();
-            currentStack = stacks[Math.floor(Math.random() * stacks.length)];
+            let stack = stacks[Math.floor(Math.random() * stacks.length)];
             
-            try {
-                const res = await fetch(`./${currentStack}.json?t=${new Date().getTime()}`);
-                db = await res.json();
-                let positions = Object.keys(db);
-                currentPos = positions[Math.floor(Math.random() * positions.length)];
-                
-                document.getElementById('stackText').innerText = currentStack.toUpperCase();
-                document.querySelectorAll('.seat').forEach(s => s.classList.remove('active-seat'));
-                document.getElementById('s-'+currentPos).classList.add('active-seat');
-                
-                const btn = document.getElementById('s-BTN');
-                document.getElementById('dealerBtn').style.cssText = `top:${btn.offsetTop+10}px; left:${btn.offsetLeft+10}px;`;
-                
-                renderCards();
-            } catch(e) { document.getElementById('feedback').innerText = "Erro ao carregar!"; }
+            const res = await fetch(`./${stack}.json?t=${new Date().getTime()}`);
+            db = await res.json();
+            currentPos = Object.keys(db)[Math.floor(Math.random() * Object.keys(db).length)];
+            
+            document.getElementById('stackText').innerText = stack.toUpperCase();
+            document.querySelectorAll('.seat').forEach(s => s.classList.remove('active-seat'));
+            document.getElementById('s-'+currentPos).classList.add('active-seat');
+            
+            const btn = document.getElementById('s-BTN');
+            document.getElementById('dealerBtn').style.cssText = `top:${btn.offsetTop+10}px; left:${btn.offsetLeft+10}px;`;
+            
+            renderCards();
         }
 
         function renderCards() {
@@ -116,15 +120,15 @@
                     div.innerText = h; m.appendChild(div);
                 }
             }
-            const overlay = document.getElementById('matrixOverlay');
-            overlay.style.display = (overlay.style.display === 'flex') ? 'none' : 'flex';
+            const o = document.getElementById('matrixOverlay');
+            o.style.display = (o.style.display === 'flex') ? 'none' : 'flex';
         }
 
         function checkAction(action) {
             handsCount++;
             let correct = (db[currentPos]?.hands[currentHand] || "fold").toLowerCase();
             if(action === correct) { hits++; document.getElementById('feedback').innerText = "✅ ACERTOU!"; }
-            else document.getElementById('feedback').innerText = "❌ ERROU!";
+            else document.getElementById('feedback').innerText = "❌ ERROU: " + correct.toUpperCase();
             document.getElementById('count').innerText = handsCount;
             document.getElementById('perc').innerText = Math.round((hits/handsCount)*100);
             setTimeout(nextRound, 800);
