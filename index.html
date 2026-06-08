@@ -2,41 +2,29 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pro GTO Trainer</title>
     <style>
         body { font-family: sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; }
+        .header { width: 100%; max-width: 350px; display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .stack-badge { background: #f97316; padding: 4px 12px; border-radius: 6px; font-weight: bold; }
         
-        /* Header Stats & Stack */
-        .header { width: 100%; max-width: 350px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .stats { font-size: 0.8rem; color: #94a3b8; }
-        .stack-badge { background: #f97316; color: white; padding: 4px 12px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; }
-
-        /* Mesa e Posições */
         .table { width: 340px; height: 180px; background: #064e3b; border-radius: 100px; margin: 15px 0; border: 8px solid #334155; position: relative; }
         .seat { position: absolute; background: #1e293b; padding: 3px 6px; border-radius: 4px; font-size: 8px; border: 1px solid #475569; color: #94a3b8; }
-        .active-seat { border-color: #f97316; color: #f97316; font-weight: bold; background: #334155; }
+        .active-seat { border: 1px solid #f97316; color: #f97316; font-weight: bold; background: #334155; }
         .dealer-btn { position: absolute; width: 18px; height: 18px; background: white; color: black; border-radius: 50%; font-size: 9px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 1px solid #000; }
 
-        /* Cartas */
-        .hand-container { display: flex; gap: 15px; margin: 15px 0; }
         .card { width: 70px; height: 100px; background: white; color: black; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 8px; font-weight: bold; font-size: 1.6rem; }
         .suit-big { font-size: 3rem; margin-top: -10px; }
         .red { color: #dc2626; }
         .black { color: #1e293b; }
-
-        /* Botões */
-        .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; max-width: 350px; }
+        
         button { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; }
-        .btn-raise { background: #f97316; } 
-        .btn-fold { background: #ef4444; } 
-        .btn-matrix { background: #64748b; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="stats">Mãos: <span id="count">0</span>/100 | Acerto: <span id="perc">0</span>%</div>
+        <div style="font-size: 0.8rem; color: #94a3b8;">Mãos: <span id="count">0</span>/100 | Acerto: <span id="perc">0</span>%</div>
         <div class="stack-badge" id="stackText">--</div>
     </div>
 
@@ -53,14 +41,52 @@
         <div id="dealerBtn" class="dealer-btn">D</div>
     </div>
 
-    <div class="hand-container" id="visualCards"></div>
+    <div id="visualCards" style="display:flex; gap:15px; margin: 15px 0;"></div>
     
-    <div class="actions">
-        <button class="btn-raise" onclick="checkAction('raise')">RAISE</button>
-        <button class="btn-fold" onclick="checkAction('fold')">FOLD</button>
-        <button class="btn-matrix" onclick="toggleMatrix()">MATRIZ</button>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; max-width: 350px;">
+        <button style="background: #f97316;" onclick="checkAction('raise')">RAISE</button>
+        <button style="background: #ef4444;" onclick="checkAction('fold')">FOLD</button>
+        <button style="background: #64748b;" onclick="toggleMatrix()">MATRIZ</button>
     </div>
     <p id="feedback" style="font-weight:bold; height:20px;"></p>
 
-    </body>
+    <script>
+        const cardValues = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+        const stacks = ["100bb", "60bb", "30bb", "20bb"];
+        let db = {}, handPool = [], handsCount = 0, hits = 0;
+
+        function shuffleHands() {
+            let h = [];
+            for(let i=0; i<13; i++) for(let j=0; j<13; j++) h.push((i<j)?cardValues[i]+cardValues[j]+"s":(i>j)?cardValues[j]+cardValues[i]+"o":cardValues[i]+cardValues[j]);
+            return h.sort(() => Math.random() - 0.5);
+        }
+
+        async function nextRound() {
+            if(handsCount >= 100) { alert("Treino Finalizado!"); handsCount=0; hits=0; }
+            if(handPool.length === 0) handPool = shuffleHands();
+            let currentHand = handPool.pop();
+            let currentStack = stacks[Math.floor(Math.random() * stacks.length)];
+            
+            try {
+                // Adicionado cache: false para forçar o carregamento novo
+                const res = await fetch(`./${currentStack}.json?t=${new Date().getTime()}`);
+                db = await res.json();
+                let positions = Object.keys(db);
+                let currentPos = positions[Math.floor(Math.random() * positions.length)];
+                
+                document.getElementById('stackText').innerText = currentStack.toUpperCase();
+                document.querySelectorAll('.seat').forEach(s => s.classList.remove('active-seat'));
+                document.getElementById('s-'+currentPos).classList.add('active-seat');
+                
+                const btn = document.getElementById('s-BTN');
+                document.getElementById('dealerBtn').style.cssText = `top:${btn.offsetTop+10}px; left:${btn.offsetLeft+10}px;`;
+                
+                // Renderização das cartas... (inclua a lógica de render aqui)
+            } catch(e) { document.getElementById('feedback').innerText = "Erro ao carregar JSON!"; }
+        }
+        
+        // Chamar o nextRound na carga inicial
+        window.onload = nextRound;
+    </script>
+</body>
 </html>
