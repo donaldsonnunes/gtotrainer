@@ -2,22 +2,21 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz GTO</title>
     <style>
         body { font-family: sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .box { background: #1e293b; padding: 30px; border-radius: 12px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 10px 15px rgba(0,0,0,0.3); }
-        .hand-text { font-size: 2.5rem; margin: 20px 0; color: #4ade80; }
-        button { padding: 15px 30px; font-size: 1.2rem; cursor: pointer; margin: 10px; border-radius: 8px; border: none; font-weight: bold; }
-        .btn-raise { background: #f97316; color: white; }
-        .btn-fold { background: #4b5563; color: white; }
-        #debug { font-size: 10px; color: #fbbf24; margin-top: 20px; }
+        .box { background: #1e293b; padding: 20px; border-radius: 8px; text-align: center; width: 300px; }
+        button { padding: 15px 30px; font-size: 16px; cursor: pointer; margin: 5px; border-radius: 5px; border: none; }
+        .btn-raise { background: #f97316; }
+        .btn-fold { background: #4b5563; }
+        #debug { font-size: 10px; color: yellow; margin-top: 10px; }
     </style>
 </head>
 <body>
+    <h1>Quiz GTO</h1>
     <div class="box">
         <p>Stack: <span id="stack">--</span> | Pos: <span id="pos">--</span></p>
-        <p class="hand-text" id="hand">--</p>
+        <p>Mão: <strong id="hand" style="font-size: 24px;">--</strong></p>
         <button class="btn-raise" onclick="check('raise')">Raise</button>
         <button class="btn-fold" onclick="check('fold')">Fold</button>
         <p id="result"></p>
@@ -25,56 +24,46 @@
     </div>
 
     <script>
-        const allHands = ["AA","KK","QQ","JJ","TT","99","88","77","AKs","AQs","AJs","ATs","AKo","AQo","AJo","KQs","KJs","QJs","JTs"];
+        const handsList = ["AA","KK","QQ","JJ","TT","99","88","AKs","AQs","AJs","ATs","AKo","AQo","AJo","KQs","KJs","QJs","JTs"]; 
         const stacks = ["100bb", "60bb", "30bb", "20bb"];
         const positions = ["UTG", "UTG1", "UTG2", "MP", "HJ", "CO", "BTN", "SB"];
         
         let db = {};
+        let currentPos = "", currentHand = "", currentStack = "";
 
         async function loadStack(stackName) {
             try {
                 const res = await fetch('./' + stackName + '.json');
                 db = await res.json();
                 document.getElementById('debug').innerText = "Carregado: " + stackName + ".json";
-            } catch(e) { document.getElementById('debug').innerText = "Erro ao carregar " + stackName; }
-            next();
-        }
-
-        function next() {
-            // Sorteia novo stack e nova mão a cada rodada
-            let nextStack = stacks[Math.floor(Math.random() * stacks.length)];
-            let nextPos = positions[Math.floor(Math.random() * positions.length)];
-            let nextHand = allHands[Math.floor(Math.random() * allHands.length)];
-            
-            // Se o stack mudou, recarrega o arquivo JSON correspondente
-            if (nextStack !== document.getElementById('stack').innerText.toLowerCase()) {
-                loadStack(nextStack);
-            } else {
-                updateUI(nextStack, nextPos, nextHand);
+                currentStack = stackName;
+                next(); // DISPARA O JOGO APÓS CARREGAR
+            } catch(e) { 
+                document.getElementById('debug').innerText = "Erro ao carregar " + stackName; 
             }
         }
 
-        function updateUI(stack, pos, hand) {
-            document.getElementById('stack').innerText = stack.toUpperCase();
-            document.getElementById('pos').innerText = pos;
-            document.getElementById('hand').innerText = hand;
+        function next() {
+            currentPos = positions[Math.floor(Math.random() * positions.length)];
+            currentHand = handsList[Math.floor(Math.random() * handsList.length)];
+            
+            document.getElementById('stack').innerText = currentStack.toUpperCase();
+            document.getElementById('pos').innerText = currentPos;
+            document.getElementById('hand').innerText = currentHand;
             document.getElementById('result').innerText = "";
         }
 
         function check(action) {
-            let pos = document.getElementById('pos').innerText;
-            let hand = document.getElementById('hand').innerText;
+            // Acesso seguro: db[pos].hands[hand]
+            let posData = (db[currentPos] && db[currentPos].hands) ? db[currentPos].hands : null;
+            let correct = (posData && posData[currentHand]) ? posData[currentHand].toLowerCase() : "fold";
             
-            // Acesso seguro ao seu JSON com nó "hands"
-            let posData = db[pos] ? db[pos].hands : null;
-            let correct = (posData && posData[hand]) ? posData[hand].toLowerCase() : "fold";
-            
-            document.getElementById('result').innerText = (action === correct) ? "✅ Correto!" : "❌ Errou. Era " + correct;
+            document.getElementById('result').innerText = (action === correct) ? "✅ Acertou!" : "❌ Errou. Era " + correct;
             setTimeout(next, 1200);
         }
 
-        // Início
-        loadStack("60bb");
+        // Inicia com um stack aleatório
+        loadStack(stacks[Math.floor(Math.random() * stacks.length)]);
     </script>
 </body>
 </html>
