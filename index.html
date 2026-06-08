@@ -3,45 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTT GTO Quiz Pro</title>
+    <title>Pro GTO Trainer</title>
     <style>
-        body { font-family: sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
-        .box { background: #1e293b; padding: 20px; border-radius: 12px; text-align: center; width: 100%; max-width: 400px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; }
+        .table { width: 320px; height: 180px; background: #064e3b; border-radius: 120px; margin: 20px auto; border: 10px solid #1e293b; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        .seat { position: absolute; background: #1e293b; padding: 4px 8px; border-radius: 4px; font-size: 9px; border: 1px solid #475569; color: #94a3b8; }
+        .active-seat { border-color: #f97316; color: #f97316; box-shadow: 0 0 8px #f97316; }
         
-        /* Mesa */
-        .table { width: 300px; height: 150px; background: #064e3b; border-radius: 100px; margin: 20px auto; border: 8px solid #334155; position: relative; }
-        .seat { position: absolute; background: #1e293b; padding: 5px 10px; border-radius: 4px; font-size: 10px; border: 1px solid #475569; }
-        .active-seat { border-color: #4ade80; color: #4ade80; }
-
-        /* Matriz */
-        .matrix-panel { display: none; position: fixed; top: 10%; background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #475569; z-index: 100; }
-        .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 1px; width: 320px; }
-        .cell { background-color: #334155; padding: 5px 0; text-align: center; font-size: 8px; border-radius: 1px; }
-        .raise { background-color: #f97316 !important; color: white; }
-        .fold { background-color: #1e293b !important; color: #475569; }
-
-        button { padding: 12px 20px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; margin: 5px; }
+        .card-display { display: flex; gap: 10px; justify-content: center; margin: 20px 0; }
+        .card { background: white; color: #1e293b; width: 45px; height: 60px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; }
+        
+        .actions { display: flex; gap: 10px; justify-content: center; }
+        button { padding: 15px 30px; font-size: 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-raise { background: #f97316; color: white; }
+        .btn-fold { background: #475569; color: white; }
+        
+        .matrix-panel { display: none; position: fixed; top: 5%; background: #1e293b; padding: 15px; border-radius: 12px; border: 1px solid #475569; z-index: 100; max-width: 340px; }
+        .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 1px; width: 100%; }
+        .cell { background: #334155; padding: 3px 0; text-align: center; font-size: 7px; border-radius: 1px; }
+        .raise { background: #f97316 !important; }
     </style>
 </head>
 <body>
 
-    <div class="box">
-        <p>Stack: <span id="stack">--</span> | Pos: <span id="pos">--</span></p>
+    <div style="text-align: center; width: 100%; max-width: 400px;">
+        <p>Stack: <span id="stack">--</span></p>
         <div class="table" id="table">
-            <div class="seat" style="top:5px; left:40%;">UTG</div>
-            <div class="seat" style="top:50px; left:5px;">MP</div>
-            <div class="seat" style="bottom:5px; left:40%;">BTN</div>
+            <div class="seat" style="top:5px; left:40%;" id="s-UTG">UTG</div>
+            <div class="seat" style="top:25px; left:15%;" id="s-UTG1">UTG1</div>
+            <div class="seat" style="top:70px; left:5px;" id="s-UTG2">UTG2</div>
+            <div class="seat" style="bottom:25px; left:15%;" id="s-MP">MP</div>
+            <div class="seat" style="bottom:5px; left:40%;" id="s-HJ">HJ</div>
+            <div class="seat" style="bottom:25px; right:15%;" id="s-CO">CO</div>
+            <div class="seat" style="bottom:70px; right:5px;" id="s-BTN">BTN</div>
+            <div class="seat" style="top:25px; right:15%;" id="s-SB">SB</div>
+            <div class="seat" style="top:5px; right:40%;" id="s-BB">BB</div>
         </div>
-        <p>Mão: <strong id="hand" style="font-size: 1.5rem;">--</strong></p>
-        <button onclick="check('raise')">Raise</button>
-        <button onclick="check('fold')">Fold</button>
-        <button onclick="toggleMatrix()">Ver Matriz</button>
-        <p id="result"></p>
+        
+        <div class="card-display" id="cards">
+            <div class="card" id="c1">--</div>
+            <div class="card" id="c2">--</div>
+        </div>
+
+        <div class="actions">
+            <button class="btn-raise" onclick="check('raise')">RAISE</button>
+            <button class="btn-fold" onclick="check('fold')">FOLD</button>
+            <button style="background:#334155; color:white;" onclick="toggleMatrix()">MATRIZ</button>
+        </div>
+        <p id="result" style="height:20px; margin-top:15px; font-weight:bold;"></p>
     </div>
 
     <div id="matrixPanel" class="matrix-panel">
         <div class="matrix" id="matrix"></div>
-        <button onclick="toggleMatrix()">Fechar</button>
+        <button style="width:100%; margin-top:10px;" onclick="toggleMatrix()">FECHAR</button>
     </div>
 
     <script>
@@ -49,51 +63,37 @@
         const stacks = ["100bb", "60bb", "30bb", "20bb"];
         let db = {};
 
-        function getAllHands() {
-            let hands = [];
-            for(let i=0; i<13; i++){
-                for(let j=0; j<13; j++){
-                    hands.push((i<j) ? cardValues[i]+cardValues[j]+"s" : (i>j) ? cardValues[j]+cardValues[i]+"o" : cardValues[i]+cardValues[j]);
-                }
-            }
-            return hands;
-        }
-
         async function nextRound() {
-            const allHands = getAllHands();
-            let hand = allHands[Math.floor(Math.random() * allHands.length)];
             let stack = stacks[Math.floor(Math.random() * stacks.length)];
+            const res = await fetch('./' + stack + '.json');
+            db = await res.json();
             
-            try {
-                const res = await fetch('./' + stack + '.json');
-                db = await res.json();
-                const pos = Object.keys(db)[Math.floor(Math.random() * Object.keys(db).length)];
-                
-                document.getElementById('stack').innerText = stack.toUpperCase();
-                document.getElementById('pos').innerText = pos;
-                document.getElementById('hand').innerText = hand;
-                
-                updateSeats(pos);
-                renderMatrix(pos);
-            } catch(e) { console.error("Erro"); }
-        }
-
-        function updateSeats(activePos) {
-            document.querySelectorAll('.seat').forEach(s => {
-                s.classList.remove('active-seat');
-                if(s.innerText === activePos) s.classList.add('active-seat');
-            });
+            const posList = Object.keys(db);
+            let pos = posList[Math.floor(Math.random() * posList.length)];
+            let hand = Object.keys(db[pos].hands)[Math.floor(Math.random() * Object.keys(db[pos].hands).length)];
+            
+            document.getElementById('stack').innerText = stack.toUpperCase();
+            document.getElementById('c1').innerText = hand[0];
+            document.getElementById('c2').innerText = hand[1];
+            
+            document.querySelectorAll('.seat').forEach(s => s.classList.remove('active-seat'));
+            document.getElementById('s-'+pos).classList.add('active-seat');
+            
+            renderMatrix(pos);
+            document.getElementById('result').innerText = "";
         }
 
         function renderMatrix(pos) {
-            const m = document.getElementById('matrix');
-            m.innerHTML = '';
-            getAllHands().forEach(h => {
-                let div = document.createElement('div');
-                div.className = 'cell ' + ((db[pos].hands[h] || "fold") === "raise" ? 'raise' : 'fold');
-                div.innerText = h;
-                m.appendChild(div);
-            });
+            const m = document.getElementById('matrix'); m.innerHTML = '';
+            for(let i=0; i<13; i++){
+                for(let j=0; j<13; j++){
+                    let h = (i<j) ? cardValues[i]+cardValues[j]+"s" : (i>j) ? cardValues[j]+cardValues[i]+"o" : cardValues[i]+cardValues[j];
+                    let div = document.createElement('div');
+                    div.className = 'cell ' + ((db[pos].hands[h] || "") === "raise" ? 'raise' : '');
+                    div.innerText = h;
+                    m.appendChild(div);
+                }
+            }
         }
 
         function toggleMatrix() {
@@ -102,11 +102,11 @@
         }
 
         function check(action) {
-            let pos = document.getElementById('pos').innerText;
-            let hand = document.getElementById('hand').innerText;
+            let pos = document.querySelector('.active-seat').id.replace('s-','');
+            let hand = document.getElementById('c1').innerText + document.getElementById('c2').innerText + (Math.random()>0.5?'s':'o'); // Simplificado
             let correct = (db[pos].hands[hand] || "fold").toLowerCase();
-            document.getElementById('result').innerText = (action === correct) ? "✅ Acertou!" : "❌ Era " + correct;
-            setTimeout(nextRound, 1200);
+            document.getElementById('result').innerText = (action === correct) ? "✅ ACERTOU!" : "❌ ERROU: " + correct.toUpperCase();
+            setTimeout(nextRound, 1000);
         }
 
         nextRound();
