@@ -2,24 +2,26 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>MTT GTO Quiz</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MTT GTO Quiz Trainer</title>
     <style>
-        /* CSS FORTE para não ser sobrescrito */
-        body { font-family: sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .box { background: #1e293b; padding: 20px; border-radius: 8px; text-align: center; width: 100%; max-width: 400px; margin-bottom: 20px; }
-        .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; width: 100%; max-width: 400px; }
-        .cell { background-color: #334155; padding: 4px; text-align: center; font-size: 8px; border-radius: 2px; color: #cbd5e1; }
+        body { font-family: sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
+        .box { background: #1e293b; padding: 20px; border-radius: 12px; text-align: center; width: 95%; max-width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 1px; width: 95%; max-width: 400px; margin-top: 20px; }
+        .cell { background-color: #334155; padding: 4px 1px; text-align: center; font-size: 9px; border-radius: 1px; color: #cbd5e1; }
         .raise { background-color: #f97316 !important; color: white; }
-        button { padding: 15px 30px; cursor: pointer; margin: 5px; font-size: 16px; border-radius: 5px; border: none; }
+        button { padding: 15px 30px; font-size: 16px; margin: 5px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-raise { background: #f97316; color: white; }
+        .btn-fold { background: #4b5563; color: white; }
     </style>
 </head>
 <body>
     <div class="box">
         <p>Stack: <span id="stack">--</span> | Pos: <span id="pos">--</span></p>
-        <p>Mão: <strong id="hand" style="font-size: 24px;">--</strong></p>
-        <button onclick="check('raise')">Raise</button>
-        <button onclick="check('fold')">Fold</button>
-        <p id="result"></p>
+        <p>Mão: <strong id="hand" style="font-size: 1.8rem;">--</strong></p>
+        <button class="btn-raise" onclick="check('raise')">Raise</button>
+        <button class="btn-fold" onclick="check('fold')">Fold</button>
+        <p id="result" style="height: 20px; font-weight: bold;"></p>
     </div>
     <div id="matrix" class="matrix"></div>
 
@@ -27,29 +29,31 @@
         const cardValues = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
         const stacks = ["100bb", "60bb", "30bb", "20bb"];
         let db = {};
+        let currentPos = "", currentHand = "", currentStack = "";
 
-        async function loadGame() {
-            let nextStack = stacks[Math.floor(Math.random() * stacks.length)];
+        async function loadStack() {
+            currentStack = stacks[Math.floor(Math.random() * stacks.length)];
             try {
-                const res = await fetch('./' + nextStack + '.json');
+                const res = await fetch('./' + currentStack + '.json');
                 db = await res.json();
-                document.getElementById('stack').innerText = nextStack.toUpperCase();
-                next(nextStack);
-            } catch(e) { console.error("Erro ao carregar"); }
+                next();
+            } catch(e) { console.error("Erro ao carregar JSON"); }
         }
 
-        function next(stack) {
+        function next() {
             const positions = Object.keys(db);
-            let pos = positions[Math.floor(Math.random() * positions.length)];
-            let hands = Object.keys(db[pos].hands);
-            let hand = hands[Math.floor(Math.random() * hands.length)];
+            currentPos = positions[Math.floor(Math.random() * positions.length)];
+            const hands = Object.keys(db[currentPos].hands);
+            currentHand = hands[Math.floor(Math.random() * hands.length)];
             
-            document.getElementById('pos').innerText = pos;
-            document.getElementById('hand').innerText = hand;
-            renderMatrix(pos);
+            document.getElementById('stack').innerText = currentStack.toUpperCase();
+            document.getElementById('pos').innerText = currentPos;
+            document.getElementById('hand').innerText = currentHand;
+            document.getElementById('result').innerText = "";
+            renderMatrix();
         }
 
-        function renderMatrix(pos) {
+        function renderMatrix() {
             const m = document.getElementById('matrix');
             m.innerHTML = '';
             for(let i=0; i<13; i++){
@@ -58,21 +62,19 @@
                     let div = document.createElement('div');
                     div.className = 'cell';
                     div.innerText = hand;
-                    if(db[pos].hands[hand] === "raise") div.classList.add('raise');
+                    if(db[currentPos].hands[hand] === "raise") div.classList.add('raise');
                     m.appendChild(div);
                 }
             }
         }
 
         function check(action) {
-            let pos = document.getElementById('pos').innerText;
-            let hand = document.getElementById('hand').innerText;
-            let correct = (db[pos].hands[hand] || "fold").toLowerCase();
-            document.getElementById('result').innerText = (action === correct) ? "✅ Acertou!" : "❌ Era " + correct;
-            setTimeout(loadGame, 1000);
+            let correct = (db[currentPos].hands[currentHand] || "fold").toLowerCase();
+            document.getElementById('result').innerText = (action === correct) ? "✅ Acertou!" : "❌ Errou: " + correct;
+            setTimeout(loadStack, 1200); // Sorteia novo stack/mão após acertar
         }
 
-        loadGame();
+        loadStack();
     </script>
 </body>
 </html>
