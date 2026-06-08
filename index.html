@@ -3,35 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz GTO Pro</title>
+    <title>MTT GTO Quiz Pro</title>
     <style>
         body { font-family: sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
         .box { background: #1e293b; padding: 20px; border-radius: 12px; text-align: center; width: 100%; max-width: 400px; }
-        .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 1px; width: 100%; max-width: 400px; margin-top: 20px; }
-        .cell { background-color: #334155; padding: 4px 1px; text-align: center; font-size: 8px; border-radius: 1px; color: #94a3b8; }
-        .raise { background-color: #f97316 !important; color: white !important; font-weight: bold; }
-        .fold { background-color: #1e293b !important; color: #475569 !important; }
-        button { padding: 15px 30px; font-size: 16px; margin: 5px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
-        .btn-raise { background: #f97316; color: white; }
-        .btn-fold { background: #4b5563; color: white; }
+        
+        /* Mesa */
+        .table { width: 300px; height: 150px; background: #064e3b; border-radius: 100px; margin: 20px auto; border: 8px solid #334155; position: relative; }
+        .seat { position: absolute; background: #1e293b; padding: 5px 10px; border-radius: 4px; font-size: 10px; border: 1px solid #475569; }
+        .active-seat { border-color: #4ade80; color: #4ade80; }
+
+        /* Matriz */
+        .matrix-panel { display: none; position: fixed; top: 10%; background: #1e293b; padding: 20px; border-radius: 12px; border: 1px solid #475569; z-index: 100; }
+        .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 1px; width: 320px; }
+        .cell { background-color: #334155; padding: 5px 0; text-align: center; font-size: 8px; border-radius: 1px; }
+        .raise { background-color: #f97316 !important; color: white; }
+        .fold { background-color: #1e293b !important; color: #475569; }
+
+        button { padding: 12px 20px; cursor: pointer; border-radius: 6px; border: none; font-weight: bold; margin: 5px; }
     </style>
 </head>
 <body>
+
     <div class="box">
         <p>Stack: <span id="stack">--</span> | Pos: <span id="pos">--</span></p>
-        <p>Mão: <strong id="hand" style="font-size: 2rem;">--</strong></p>
-        <button class="btn-raise" onclick="check('raise')">Raise</button>
-        <button class="btn-fold" onclick="check('fold')">Fold</button>
-        <p id="result" style="height:20px;"></p>
+        <div class="table" id="table">
+            <div class="seat" style="top:5px; left:40%;">UTG</div>
+            <div class="seat" style="top:50px; left:5px;">MP</div>
+            <div class="seat" style="bottom:5px; left:40%;">BTN</div>
+        </div>
+        <p>Mão: <strong id="hand" style="font-size: 1.5rem;">--</strong></p>
+        <button onclick="check('raise')">Raise</button>
+        <button onclick="check('fold')">Fold</button>
+        <button onclick="toggleMatrix()">Ver Matriz</button>
+        <p id="result"></p>
     </div>
-    <div id="matrix" class="matrix"></div>
+
+    <div id="matrixPanel" class="matrix-panel">
+        <div class="matrix" id="matrix"></div>
+        <button onclick="toggleMatrix()">Fechar</button>
+    </div>
 
     <script>
         const cardValues = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
         const stacks = ["100bb", "60bb", "30bb", "20bb"];
         let db = {};
 
-        // Gera todas as 169 mãos possíveis
         function getAllHands() {
             let hands = [];
             for(let i=0; i<13; i++){
@@ -43,50 +60,52 @@
         }
 
         async function nextRound() {
-            // 1. Sorteia a mão primeiro (qualquer uma do baralho)
             const allHands = getAllHands();
             let hand = allHands[Math.floor(Math.random() * allHands.length)];
-            
-            // 2. Sorteia Stack e Posição
             let stack = stacks[Math.floor(Math.random() * stacks.length)];
+            
             try {
                 const res = await fetch('./' + stack + '.json');
                 db = await res.json();
+                const pos = Object.keys(db)[Math.floor(Math.random() * Object.keys(db).length)];
                 
-                const positions = Object.keys(db);
-                let pos = positions[Math.floor(Math.random() * positions.length)];
-                
-                // 3. Atualiza interface
                 document.getElementById('stack').innerText = stack.toUpperCase();
                 document.getElementById('pos').innerText = pos;
                 document.getElementById('hand').innerText = hand;
-                document.getElementById('result').innerText = "";
                 
+                updateSeats(pos);
                 renderMatrix(pos);
-            } catch(e) { console.error("Erro ao carregar"); }
+            } catch(e) { console.error("Erro"); }
+        }
+
+        function updateSeats(activePos) {
+            document.querySelectorAll('.seat').forEach(s => {
+                s.classList.remove('active-seat');
+                if(s.innerText === activePos) s.classList.add('active-seat');
+            });
         }
 
         function renderMatrix(pos) {
             const m = document.getElementById('matrix');
             m.innerHTML = '';
-            const allHands = getAllHands();
-            
-            allHands.forEach(hand => {
+            getAllHands().forEach(h => {
                 let div = document.createElement('div');
-                div.className = 'cell';
-                div.innerText = hand;
-                let action = (db[pos].hands[hand] || "fold").toLowerCase();
-                div.classList.add(action === "raise" ? 'raise' : 'fold');
+                div.className = 'cell ' + ((db[pos].hands[h] || "fold") === "raise" ? 'raise' : 'fold');
+                div.innerText = h;
                 m.appendChild(div);
             });
+        }
+
+        function toggleMatrix() {
+            const p = document.getElementById('matrixPanel');
+            p.style.display = (p.style.display === 'block') ? 'none' : 'block';
         }
 
         function check(action) {
             let pos = document.getElementById('pos').innerText;
             let hand = document.getElementById('hand').innerText;
             let correct = (db[pos].hands[hand] || "fold").toLowerCase();
-            
-            document.getElementById('result').innerText = (action === correct) ? "✅ Acertou!" : "❌ Errou: " + correct.toUpperCase();
+            document.getElementById('result').innerText = (action === correct) ? "✅ Acertou!" : "❌ Era " + correct;
             setTimeout(nextRound, 1200);
         }
 
