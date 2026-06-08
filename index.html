@@ -7,60 +7,60 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; }
         
-        /* MESA E ASSENTOS CORRIGIDOS */
-        .table { width: 340px; height: 200px; background: #064e3b; border-radius: 120px; margin: 20px 0; border: 10px solid #1e293b; position: relative; }
-        .seat { position: absolute; background: #1e293b; padding: 3px 6px; border-radius: 4px; font-size: 9px; border: 1px solid #475569; color: #94a3b8; }
-        .dealer-btn { position: absolute; width: 20px; height: 20px; background: white; color: black; border-radius: 50%; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 2px solid #000; }
-        .active-seat { border-color: #f97316; color: #f97316; font-weight: bold; }
+        .table { width: 340px; height: 180px; background: #064e3b; border-radius: 100px; margin: 20px 0; border: 8px solid #334155; position: relative; }
+        .seat { position: absolute; background: #1e293b; padding: 3px 6px; border-radius: 4px; font-size: 8px; border: 1px solid #475569; color: #94a3b8; }
+        .active-seat { border-color: #f97316; color: #f97316; font-weight: bold; background: #334155; }
+        .dealer-btn { position: absolute; width: 18px; height: 18px; background: white; color: black; border-radius: 50%; font-size: 9px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; }
 
-        /* CARTAS REAIS */
-        .hand-display { display: flex; gap: 10px; margin: 20px 0; }
-        .card { width: 60px; height: 85px; background: white; color: black; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 5px; font-weight: bold; font-size: 1.1rem; }
-        .suit-big { font-size: 2.5rem; margin-top: -5px; }
-        .red { color: #dc2626; }
-        .black { color: #1e293b; }
+        .hand-container { display: flex; gap: 10px; margin: 15px 0; }
+        .card { width: 50px; height: 70px; background: white; color: black; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 5px; font-weight: bold; font-size: 1rem; }
+        .suit-big { font-size: 2rem; margin-top: -5px; }
 
-        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 350px; }
-        button { padding: 14px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+        .matrix-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column; align-items: center; padding-top: 20px; }
+        .matrix-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 1px; width: 340px; }
+        .cell { background: #334155; padding: 4px 0; text-align: center; font-size: 7px; color: #94a3b8; }
+        .raise { background: #f97316 !important; color: white; }
+        .highlight { border: 2px solid #fff !important; }
     </style>
 </head>
 <body>
 
     <p>Stack: <span id="stackText">--</span></p>
     <div class="table" id="table">
-        <div class="seat" style="top:5px; left:43%;" id="s-BB">BB</div>
-        <div class="seat" style="top:35px; left:15%;" id="s-SB">SB</div>
-        <div class="seat" style="top:85px; left:5%;" id="s-BTN">BTN</div>
-        <div class="seat" style="bottom:35px; left:15%;" id="s-CO">CO</div>
-        <div class="seat" style="bottom:5px; left:43%;" id="s-HJ">HJ</div>
-        <div class="seat" style="bottom:35px; right:15%;" id="s-MP">MP</div>
-        <div class="seat" style="top:85px; right:5%;" id="s-UTG2">UTG2</div>
-        <div class="seat" style="top:35px; right:15%;" id="s-UTG1">UTG1</div>
-        <div class="seat" style="top:5px; right:43%;" id="s-UTG">UTG</div>
+        <div class="seat" style="top:5px; left:45%;" id="s-UTG">UTG</div>
+        <div class="seat" style="top:30px; left:18%;" id="s-UTG1">UTG1</div>
+        <div class="seat" style="top:80px; left:5%;" id="s-UTG2">UTG2</div>
+        <div class="seat" style="bottom:30px; left:18%;" id="s-MP">MP</div>
+        <div class="seat" style="bottom:5px; left:45%;" id="s-HJ">HJ</div>
+        <div class="seat" style="bottom:30px; right:18%;" id="s-CO">CO</div>
+        <div class="seat" style="top:80px; right:5%;" id="s-BTN">BTN</div>
+        <div class="seat" style="top:30px; right:18%;" id="s-SB">SB</div>
+        <div class="seat" style="top:5px; right:45%;" id="s-BB">BB</div>
         <div id="dealerBtn" class="dealer-btn">D</div>
     </div>
 
-    <div class="hand-display" id="visualCards"></div>
-    <div class="actions">
-        <button style="background:#f97316; color:white;" onclick="checkAction('raise')">RAISE</button>
-        <button style="background:#475569; color:white;" onclick="checkAction('fold')">FOLD</button>
-        <button style="grid-column: span 2; background:#334155; color:white;" onclick="toggleMatrix()">VER MATRIZ</button>
+    <div class="hand-container" id="visualCards"></div>
+    <div style="display:flex; gap:10px;">
+        <button onclick="checkAction('raise')" style="padding:15px 30px; background:#f97316; border:none; border-radius:5px; font-weight:bold;">RAISE</button>
+        <button onclick="checkAction('fold')" style="padding:15px 30px; background:#475569; border:none; border-radius:5px; font-weight:bold;">FOLD</button>
+        <button onclick="toggleMatrix()" style="padding:15px 20px; background:#334155; border:none; border-radius:5px;">MATRIZ</button>
     </div>
-    <p id="feedback" style="height:20px; font-weight:bold; margin-top:15px;"></p>
+    <p id="feedback" style="font-weight:bold; margin-top:10px;"></p>
+
+    <div class="matrix-overlay" id="matrixOverlay">
+        <div class="matrix-grid" id="matrixGrid"></div>
+        <button onclick="toggleMatrix()" style="margin-top:20px; padding:10px 40px; background:#ef4444; border:none;">FECHAR</button>
+    </div>
 
     <script>
         const cardValues = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
         const suits = [{s:'♠',c:'black'},{s:'♣',c:'black'},{s:'♥',c:'red'},{s:'♦',c:'red'}];
         const stacks = ["100bb", "60bb", "30bb", "20bb"];
-        const posList = ["UTG", "UTG1", "UTG2", "MP", "HJ", "CO", "BTN", "SB", "BB"];
-        
         let db = {}, handPool = [], currentHand = "", currentPos = "", currentStack = "";
 
-        // Gera baralho e embaralha (evita repetições)
         function shuffleHands() {
             let h = [];
-            for(let i=0; i<13; i++) for(let j=0; j<13; j++) 
-                h.push((i<j)?cardValues[i]+cardValues[j]+"s":(i>j)?cardValues[j]+cardValues[i]+"o":cardValues[i]+cardValues[j]);
+            for(let i=0; i<13; i++) for(let j=0; j<13; j++) h.push((i<j)?cardValues[i]+cardValues[j]+"s":(i>j)?cardValues[j]+cardValues[i]+"o":cardValues[i]+cardValues[j]);
             return h.sort(() => Math.random() - 0.5);
         }
 
@@ -71,17 +71,19 @@
             
             const res = await fetch(`./${currentStack}.json`);
             db = await res.json();
+            
+            const posList = Object.keys(db);
             currentPos = posList[Math.floor(Math.random() * posList.length)];
             
-            // Posiciona Dealer (D)
-            const seat = document.getElementById('s-'+currentPos);
+            // Dealer fixo no BTN
             const dealer = document.getElementById('dealerBtn');
-            dealer.style.top = (seat.offsetTop + 15) + 'px';
-            dealer.style.left = (seat.offsetLeft + 15) + 'px';
+            const btnPos = document.getElementById('s-BTN');
+            dealer.style.top = (btnPos.offsetTop + 10) + 'px';
+            dealer.style.left = (btnPos.offsetLeft + 10) + 'px';
 
             document.getElementById('stackText').innerText = currentStack.toUpperCase();
             document.querySelectorAll('.seat').forEach(s => s.classList.remove('active-seat'));
-            seat.classList.add('active-seat');
+            document.getElementById('s-'+currentPos).classList.add('active-seat');
             
             renderCards();
         }
@@ -95,8 +97,28 @@
             `;
         }
 
+        function renderMatrix() {
+            const m = document.getElementById('matrixGrid'); m.innerHTML = '';
+            for(let i=0; i<13; i++){
+                for(let j=0; j<13; j++){
+                    let h = (i<j)?cardValues[i]+cardValues[j]+"s":(i>j)?cardValues[j]+cardValues[i]+"o":cardValues[i]+cardValues[j];
+                    let div = document.createElement('div');
+                    div.className = 'cell ' + ((db[currentPos].hands[h] || "fold") === "raise" ? 'raise' : '');
+                    if(h === currentHand) div.classList.add('highlight');
+                    div.innerText = h;
+                    m.appendChild(div);
+                }
+            }
+        }
+
+        function toggleMatrix() {
+            renderMatrix();
+            const p = document.getElementById('matrixOverlay');
+            p.style.display = (p.style.display === 'flex') ? 'none' : 'flex';
+        }
+
         function checkAction(action) {
-            let correct = (db[currentPos]?.hands?.[currentHand] || "fold").toLowerCase();
+            let correct = (db[currentPos].hands[currentHand] || "fold").toLowerCase();
             document.getElementById('feedback').innerText = (action === correct) ? "✅ ACERTOU!" : "❌ ERROU: " + correct.toUpperCase();
             setTimeout(nextRound, 1000);
         }
