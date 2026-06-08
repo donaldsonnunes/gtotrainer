@@ -2,19 +2,21 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Quiz GTO</title>
+    <title>MTT GTO Quiz</title>
     <style>
+        /* CSS FORTE para não ser sobrescrito */
         body { font-family: sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .box { background: #1e293b; padding: 20px; border-radius: 8px; text-align: center; width: 300px; }
-        .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; width: 360px; margin-top: 20px; }
-        .cell { background-color: #334155; padding: 5px; text-align: center; font-size: 9px; border-radius: 2px; }
-        button { padding: 10px 20px; cursor: pointer; margin: 5px; }
+        .box { background: #1e293b; padding: 20px; border-radius: 8px; text-align: center; width: 100%; max-width: 400px; margin-bottom: 20px; }
+        .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; width: 100%; max-width: 400px; }
+        .cell { background-color: #334155; padding: 4px; text-align: center; font-size: 8px; border-radius: 2px; color: #cbd5e1; }
+        .raise { background-color: #f97316 !important; color: white; }
+        button { padding: 15px 30px; cursor: pointer; margin: 5px; font-size: 16px; border-radius: 5px; border: none; }
     </style>
 </head>
 <body>
     <div class="box">
         <p>Stack: <span id="stack">--</span> | Pos: <span id="pos">--</span></p>
-        <p>Mão: <strong id="hand">--</strong></p>
+        <p>Mão: <strong id="hand" style="font-size: 24px;">--</strong></p>
         <button onclick="check('raise')">Raise</button>
         <button onclick="check('fold')">Fold</button>
         <p id="result"></p>
@@ -23,19 +25,31 @@
 
     <script>
         const cardValues = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+        const stacks = ["100bb", "60bb", "30bb", "20bb"];
         let db = {};
-        let currentPos = "", currentHand = "", currentStack = "";
 
-        async function init() {
+        async function loadGame() {
+            let nextStack = stacks[Math.floor(Math.random() * stacks.length)];
             try {
-                const res = await fetch('./100bb.json');
+                const res = await fetch('./' + nextStack + '.json');
                 db = await res.json();
-                renderMatrix();
-                next();
-            } catch(e) { console.error("Erro JSON"); }
+                document.getElementById('stack').innerText = nextStack.toUpperCase();
+                next(nextStack);
+            } catch(e) { console.error("Erro ao carregar"); }
         }
 
-        function renderMatrix() {
+        function next(stack) {
+            const positions = Object.keys(db);
+            let pos = positions[Math.floor(Math.random() * positions.length)];
+            let hands = Object.keys(db[pos].hands);
+            let hand = hands[Math.floor(Math.random() * hands.length)];
+            
+            document.getElementById('pos').innerText = pos;
+            document.getElementById('hand').innerText = hand;
+            renderMatrix(pos);
+        }
+
+        function renderMatrix(pos) {
             const m = document.getElementById('matrix');
             m.innerHTML = '';
             for(let i=0; i<13; i++){
@@ -44,30 +58,21 @@
                     let div = document.createElement('div');
                     div.className = 'cell';
                     div.innerText = hand;
-                    // Lógica de cores: busca direto no .hands do JSON
-                    let action = (db[currentPos] && db[currentPos].hands && db[currentPos].hands[hand]) ? db[currentPos].hands[hand] : "fold";
-                    div.style.background = (action.toLowerCase() === "raise") ? "#f97316" : "#334155";
+                    if(db[pos].hands[hand] === "raise") div.classList.add('raise');
                     m.appendChild(div);
                 }
             }
         }
 
-        function next() {
-            currentPos = "UTG"; // Ajuste conforme necessário
-            const hands = Object.keys(db[currentPos].hands);
-            currentHand = hands[Math.floor(Math.random() * hands.length)];
-            document.getElementById('hand').innerText = currentHand;
-            document.getElementById('pos').innerText = currentPos;
-            document.getElementById('stack').innerText = "100BB";
+        function check(action) {
+            let pos = document.getElementById('pos').innerText;
+            let hand = document.getElementById('hand').innerText;
+            let correct = (db[pos].hands[hand] || "fold").toLowerCase();
+            document.getElementById('result').innerText = (action === correct) ? "✅ Acertou!" : "❌ Era " + correct;
+            setTimeout(loadGame, 1000);
         }
 
-        function check(action) {
-            let correct = db[currentPos].hands[currentHand].toLowerCase();
-            document.getElementById('result').innerText = (action === correct) ? "✅ Acertou!" : "❌ Errou: " + correct;
-            renderMatrix();
-            setTimeout(next, 1000);
-        }
-        init();
+        loadGame();
     </script>
 </body>
 </html>
