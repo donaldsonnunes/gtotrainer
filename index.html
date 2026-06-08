@@ -1,140 +1,41 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
-    <title>GTO Trainer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GTO Trainer Pro</title>
     <style>
-        body { font-family: sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; }
+        :root { --bg-color: #0f172a; --table-color: #064e3b; --raise-color: #f97316; --fold-color: #ef4444; }
         
-        /* Cabeçalho */
-        .header-top { width: 100%; max-width: 350px; display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .stack-box { background: #d97706; padding: 4px 10px; border-radius: 4px; font-weight: 800; font-size: 0.8rem; }
+        /* Reset para ocupar a largura total do ecrã */
+        * { box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background: var(--bg-color); 
+            color: white; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            margin: 0; 
+            padding: 15px; 
+            min-height: 100vh;
+        }
         
-        /* Mesa */
-        .table { width: 340px; height: 180px; background: #064e3b; border-radius: 100px; margin: 10px 0; border: 8px solid #334155; position: relative; }
-        .seat { position: absolute; background: #1e293b; padding: 2px 6px; border-radius: 3px; font-size: 8px; border: 1px solid #475569; color: #94a3b8; }
-        .active-seat { border: 1px solid #f97316; color: white; background: #374151; }
+        /* Containers responsivos (usando %) */
+        .header-top { width: 100%; max-width: 500px; display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .stack-box { background: #d97706; padding: 6px 15px; border-radius: 6px; font-weight: 800; font-size: 1rem; }
         
-        /* Cartas Visíveis */
-        .hand-container { display: flex; gap: 15px; margin: 20px 0; }
-        .card { width: 80px; height: 110px; background: white; color: black; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 8px; font-weight: 700; font-size: 1.8rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .suit-big { font-size: 3.5rem; margin-top: -10px; }
-        .red { color: #dc2626; }
-        .black { color: #1e293b; }
-
-        /* Botões Profissionais */
-        .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 340px; margin-bottom: 20px; }
-        .btn-ui { padding: 15px 0; border: none; font-weight: 700; cursor: pointer; border-radius: 4px; font-size: 0.9rem; }
-        .btn-raise { background: #f97316; color: white; }
-        .btn-fold { background: #ef4444; color: white; }
-        .btn-matrix { background: #475569; color: white; }
+        .table { width: 100%; max-width: 500px; aspect-ratio: 2 / 1; background: var(--table-color); border-radius: 50%; margin: 20px 0; border: 10px solid #334155; position: relative; }
         
-        /* Matriz Overlay */
-        .matrix-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
-        .matrix-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 1px; width: 340px; }
-        .cell { background: #334155; padding: 4px 0; text-align: center; font-size: 7px; color: #94a3b8; }
-        .raise { background: #f97316 !important; color: white; }
-        .highlight { border: 2px solid white !important; }
+        /* Aumentei a fonte dos assentos */
+        .seat { position: absolute; background: #1e293b; padding: 5px 10px; border-radius: 5px; font-size: 12px; border: 1px solid #475569; color: #94a3b8; }
+        
+        /* Cartas maiores e fluidas */
+        .hand-container { display: flex; gap: 20px; margin: 30px 0; }
+        .card { width: 22vw; max-width: 100px; height: 30vw; max-height: 140px; background: white; color: black; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px; font-weight: 700; font-size: 1.8rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .suit-big { font-size: 4rem; }
+        
+        /* Botões robustos */
+        .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; width: 100%; max-width: 500px; }
+        .btn-ui { padding: 20px 0; border: none; font-weight: 800; cursor: pointer; border-radius: 8px; font-size: 1.1rem; }
     </style>
-</head>
-<body>
-
-    <div class="header-top">
-        <div style="color: #94a3b8; font-size: 0.85rem;">Mãos: <span id="count">0</span>/100 | Acerto: <span id="perc">0</span>%</div>
-        <div class="stack-box" id="stackText">--</div>
-    </div>
-
-    <div class="table" id="table">
-        <div class="seat" style="top:5px; left:45%;" id="s-UTG">UTG</div>
-        <div class="seat" style="top:30px; right:20%;" id="s-UTG1">UTG1</div>
-        <div class="seat" style="top:80px; right:5%;" id="s-UTG2">UTG2</div>
-        <div class="seat" style="bottom:30px; right:20%;" id="s-MP">MP</div>
-        <div class="seat" style="bottom:5px; left:45%;" id="s-HJ">HJ</div>
-        <div class="seat" style="bottom:30px; left:20%;" id="s-CO">CO</div>
-        <div class="seat" style="top:80px; left:5%;" id="s-BTN">BTN</div>
-        <div class="seat" style="top:30px; left:20%;" id="s-SB">SB</div>
-        <div class="seat" style="top:5px; left:45%;" id="s-BB">BB</div>
-    </div>
-
-    <div class="hand-container" id="visualCards"></div>
-    
-    <div class="actions">
-        <button class="btn-ui btn-raise" onclick="checkAction('raise')">RAISE</button>
-        <button class="btn-ui btn-fold" onclick="checkAction('fold')">FOLD</button>
-        <button class="btn-ui btn-matrix" onclick="toggleMatrix()">MATRIZ</button>
-    </div>
-    <p id="feedback" style="font-weight:bold; height:20px;"></p>
-
-    <div class="matrix-overlay" id="matrixOverlay">
-        <div class="matrix-grid" id="matrixGrid"></div>
-        <button style="margin-top:20px; width: 340px; padding: 15px; border:none; background:#ef4444; color:white; font-weight:bold;" onclick="toggleMatrix()">FECHAR</button>
-    </div>
-
-    <script>
-        // (A Lógica JS que você já tinha e estava funcionando)
-        const cardValues = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
-        const suits = [{s:'♠',c:'black'},{s:'♣',c:'black'},{s:'♥',c:'red'},{s:'♦',c:'red'}];
-        const stacks = ["100bb", "60bb", "30bb", "20bb"];
-        let db = {}, handPool = [], handsCount = 0, hits = 0, currentHand = "", currentPos = "";
-
-        function shuffleHands() {
-            let h = [];
-            for(let i=0; i<13; i++) for(let j=0; j<13; j++) h.push((i<j)?cardValues[i]+cardValues[j]+"s":(i>j)?cardValues[j]+cardValues[i]+"o":cardValues[i]+cardValues[j]);
-            return h.sort(() => Math.random() - 0.5);
-        }
-
-        async function nextRound() {
-            if(handsCount >= 100) { alert("Treino Finalizado!"); handsCount=0; hits=0; }
-            if(handPool.length === 0) handPool = shuffleHands();
-            currentHand = handPool.pop();
-            let currentStack = stacks[Math.floor(Math.random() * stacks.length)];
-            
-            const res = await fetch(`./${currentStack}.json?t=${new Date().getTime()}`);
-            db = await res.json();
-            currentPos = Object.keys(db)[Math.floor(Math.random() * Object.keys(db).length)];
-            
-            document.getElementById('stackText').innerText = currentStack.toUpperCase();
-            document.querySelectorAll('.seat').forEach(s => s.classList.remove('active-seat'));
-            document.getElementById('s-'+currentPos).classList.add('active-seat');
-            
-            renderCards();
-        }
-
-        function renderCards() {
-            const v1 = currentHand[0], v2 = currentHand[1], type = currentHand[2] || "";
-            let s1 = suits[Math.floor(Math.random()*4)], s2 = (type === 's') ? s1 : suits.find(x => x.s !== s1.s);
-            document.getElementById('visualCards').innerHTML = `
-                <div class="card ${s1.c}"><div>${v1}</div><div class="suit-big">${s1.s}</div></div>
-                <div class="card ${s2.c}"><div>${v2}</div><div class="suit-big">${s2.s}</div></div>
-            `;
-        }
-
-        function toggleMatrix() {
-            const m = document.getElementById('matrixGrid'); m.innerHTML = '';
-            for(let i=0; i<13; i++){
-                for(let j=0; j<13; j++){
-                    let h = (i<j)?cardValues[i]+cardValues[j]+"s":(i>j)?cardValues[j]+cardValues[i]+"o":cardValues[i]+cardValues[j];
-                    let div = document.createElement('div');
-                    div.className = 'cell ' + ((db[currentPos]?.hands[h] || "fold") === "raise" ? 'raise' : '');
-                    if(h === currentHand) div.classList.add('highlight');
-                    div.innerText = h; m.appendChild(div);
-                }
-            }
-            const o = document.getElementById('matrixOverlay');
-            o.style.display = (o.style.display === 'flex') ? 'none' : 'flex';
-        }
-
-        function checkAction(action) {
-            handsCount++;
-            let correct = (db[currentPos]?.hands[currentHand] || "fold").toLowerCase();
-            if(action === correct) { hits++; document.getElementById('feedback').innerText = "✅ ACERTOU!"; }
-            else document.getElementById('feedback').innerText = "❌ ERROU!";
-            document.getElementById('count').innerText = handsCount;
-            document.getElementById('perc').innerText = handsCount > 0 ? Math.round((hits/handsCount)*100) : 0;
-            setTimeout(nextRound, 800);
-        }
-
-        window.onload = nextRound;
-    </script>
-</body>
-</html>
