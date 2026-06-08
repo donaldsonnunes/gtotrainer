@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz GTO</title>
+    <title>Quiz GTO Pro</title>
     <style>
         body { font-family: sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
         .box { background: #1e293b; padding: 20px; border-radius: 12px; text-align: center; width: 100%; max-width: 400px; }
         .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 1px; width: 100%; max-width: 400px; margin-top: 20px; }
         .cell { background-color: #334155; padding: 4px 1px; text-align: center; font-size: 8px; border-radius: 1px; color: #94a3b8; }
-        /* Raise é laranja, Fold é azul escuro */
         .raise { background-color: #f97316 !important; color: white !important; font-weight: bold; }
         .fold { background-color: #1e293b !important; color: #475569 !important; }
         button { padding: 15px 30px; font-size: 16px; margin: 5px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
@@ -23,7 +22,7 @@
         <p>Mão: <strong id="hand" style="font-size: 2rem;">--</strong></p>
         <button class="btn-raise" onclick="check('raise')">Raise</button>
         <button class="btn-fold" onclick="check('fold')">Fold</button>
-        <p id="result"></p>
+        <p id="result" style="height:20px;"></p>
     </div>
     <div id="matrix" class="matrix"></div>
 
@@ -31,55 +30,67 @@
         const cardValues = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
         const stacks = ["100bb", "60bb", "30bb", "20bb"];
         let db = {};
-        let currentPos = "", currentHand = "", currentStack = "";
 
-        async function loadStack() {
-            currentStack = stacks[Math.floor(Math.random() * stacks.length)];
+        // Gera todas as 169 mãos possíveis
+        function getAllHands() {
+            let hands = [];
+            for(let i=0; i<13; i++){
+                for(let j=0; j<13; j++){
+                    hands.push((i<j) ? cardValues[i]+cardValues[j]+"s" : (i>j) ? cardValues[j]+cardValues[i]+"o" : cardValues[i]+cardValues[j]);
+                }
+            }
+            return hands;
+        }
+
+        async function nextRound() {
+            // 1. Sorteia a mão primeiro (qualquer uma do baralho)
+            const allHands = getAllHands();
+            let hand = allHands[Math.floor(Math.random() * allHands.length)];
+            
+            // 2. Sorteia Stack e Posição
+            let stack = stacks[Math.floor(Math.random() * stacks.length)];
             try {
-                const res = await fetch('./' + currentStack + '.json');
+                const res = await fetch('./' + stack + '.json');
                 db = await res.json();
-                next();
+                
+                const positions = Object.keys(db);
+                let pos = positions[Math.floor(Math.random() * positions.length)];
+                
+                // 3. Atualiza interface
+                document.getElementById('stack').innerText = stack.toUpperCase();
+                document.getElementById('pos').innerText = pos;
+                document.getElementById('hand').innerText = hand;
+                document.getElementById('result').innerText = "";
+                
+                renderMatrix(pos);
             } catch(e) { console.error("Erro ao carregar"); }
         }
 
-        function next() {
-            const positions = Object.keys(db);
-            currentPos = positions[Math.floor(Math.random() * positions.length)];
-            const hands = Object.keys(db[currentPos].hands);
-            currentHand = hands[Math.floor(Math.random() * hands.length)];
-            
-            document.getElementById('stack').innerText = currentStack.toUpperCase();
-            document.getElementById('pos').innerText = currentPos;
-            document.getElementById('hand').innerText = currentHand;
-            renderMatrix();
-        }
-
-        function renderMatrix() {
+        function renderMatrix(pos) {
             const m = document.getElementById('matrix');
             m.innerHTML = '';
-            for(let i=0; i<13; i++){
-                for(let j=0; j<13; j++){
-                    let hand = (i<j) ? cardValues[i]+cardValues[j]+"s" : (i>j) ? cardValues[j]+cardValues[i]+"o" : cardValues[i]+cardValues[j];
-                    let div = document.createElement('div');
-                    div.className = 'cell';
-                    div.innerText = hand;
-                    
-                    // LÓGICA CORRIGIDA: fold por padrão, só pinta de raise se estiver no JSON
-                    let action = (db[currentPos].hands[hand] || "fold").toLowerCase();
-                    div.classList.add(action === "raise" ? 'raise' : 'fold');
-                    
-                    m.appendChild(div);
-                }
-            }
+            const allHands = getAllHands();
+            
+            allHands.forEach(hand => {
+                let div = document.createElement('div');
+                div.className = 'cell';
+                div.innerText = hand;
+                let action = (db[pos].hands[hand] || "fold").toLowerCase();
+                div.classList.add(action === "raise" ? 'raise' : 'fold');
+                m.appendChild(div);
+            });
         }
 
         function check(action) {
-            let correct = (db[currentPos].hands[currentHand] || "fold").toLowerCase();
+            let pos = document.getElementById('pos').innerText;
+            let hand = document.getElementById('hand').innerText;
+            let correct = (db[pos].hands[hand] || "fold").toLowerCase();
+            
             document.getElementById('result').innerText = (action === correct) ? "✅ Acertou!" : "❌ Errou: " + correct.toUpperCase();
-            setTimeout(loadStack, 1200);
+            setTimeout(nextRound, 1200);
         }
 
-        loadStack();
+        nextRound();
     </script>
 </body>
 </html>
