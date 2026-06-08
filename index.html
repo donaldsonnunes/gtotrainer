@@ -7,21 +7,24 @@
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; margin: 0; padding: 10px; }
         
-        /* MESA E POSIÇÕES (SENTIDO HORÁRIO CORRIGIDO) */
-        .table { width: 340px; height: 180px; background: #064e3b; border-radius: 100px; margin: 20px 0; border: 8px solid #334155; position: relative; }
+        .table { width: 340px; height: 180px; background: #064e3b; border-radius: 100px; margin: 20px 0; border: 8px solid #334155; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
         .seat { position: absolute; background: #1e293b; padding: 3px 6px; border-radius: 4px; font-size: 8px; border: 1px solid #475569; color: #94a3b8; }
         .active-seat { border-color: #f97316; color: #f97316; font-weight: bold; background: #334155; }
         .dealer-btn { position: absolute; width: 18px; height: 18px; background: white; color: black; border-radius: 50%; font-size: 9px; font-weight: bold; display: flex; align-items: center; justify-content: center; z-index: 10; border: 1px solid #000; }
 
-        /* BOTÕES PROFISSIONAIS */
-        .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; max-width: 350px; margin-top: 10px; }
-        button { padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; }
-        .btn-raise { background: #f97316; }
-        .btn-fold { background: #ef4444; } /* Vermelho vibrante */
-        .btn-matrix { background: #64748b; } /* Azul acinzentado */
+        .hand-container { display: flex; gap: 10px; margin: 20px 0; }
+        .card { width: 60px; height: 85px; background: white; color: black; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 5px; font-weight: bold; font-size: 1.1rem; }
+        .suit-big { font-size: 2.2rem; margin-top: -10px; }
+        .red { color: #dc2626; }
+        .black { color: #1e293b; }
 
-        /* MATRIZ */
-        .matrix-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
+        .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; max-width: 350px; }
+        button { padding: 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; color: white; }
+        .btn-raise { background: #f97316; }
+        .btn-fold { background: #ef4444; }
+        .btn-matrix { background: #64748b; }
+
+        .matrix-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; align-items: center; justify-content: center; }
         .matrix-grid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 1px; width: 340px; }
         .cell { background: #334155; padding: 3px 0; text-align: center; font-size: 7px; color: #94a3b8; }
         .raise { background: #f97316 !important; color: white; }
@@ -29,7 +32,6 @@
     </style>
 </head>
 <body>
-
     <p>Stack: <span id="stackText">--</span></p>
     <div class="table" id="table">
         <div class="seat" style="top:5px; left:45%;" id="s-UTG">UTG</div>
@@ -44,14 +46,13 @@
         <div id="dealerBtn" class="dealer-btn">D</div>
     </div>
 
-    <div id="visualCards" style="display:flex; gap:10px; margin: 20px 0;"></div>
-    
+    <div class="hand-container" id="visualCards"></div>
     <div class="actions">
         <button class="btn-raise" onclick="checkAction('raise')">RAISE</button>
         <button class="btn-fold" onclick="checkAction('fold')">FOLD</button>
         <button class="btn-matrix" onclick="toggleMatrix()">MATRIZ</button>
     </div>
-    <p id="feedback" style="font-weight:bold; margin-top:10px; height: 20px;"></p>
+    <p id="feedback" style="font-weight:bold; margin-top:15px; height:20px;"></p>
 
     <div class="matrix-overlay" id="matrixOverlay">
         <div class="matrix-grid" id="matrixGrid"></div>
@@ -60,19 +61,66 @@
 
     <script>
         const cardValues = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
+        const suits = [{s:'♠',c:'black'},{s:'♣',c:'black'},{s:'♥',c:'red'},{s:'♦',c:'red'}];
         const stacks = ["100bb", "60bb", "30bb", "20bb"];
         let db = {}, handPool = [], currentHand = "", currentPos = "", currentStack = "";
 
-        // Inicialização mantida...
-        // [A lógica de sorteio permanece a mesma]
-        // Dealer fixo no BTN como solicitado:
-        function updateDealer() {
-            const btnPos = document.getElementById('s-BTN');
-            const dealer = document.getElementById('dealerBtn');
-            dealer.style.top = (btnPos.offsetTop + 10) + 'px';
-            dealer.style.left = (btnPos.offsetLeft + 10) + 'px';
+        function shuffleHands() {
+            let h = [];
+            for(let i=0; i<13; i++) for(let j=0; j<13; j++) h.push((i<j)?cardValues[i]+cardValues[j]+"s":(i>j)?cardValues[j]+cardValues[i]+"o":cardValues[i]+cardValues[j]);
+            return h.sort(() => Math.random() - 0.5);
         }
-        // Chame updateDealer() dentro do nextRound()
+
+        async function nextRound() {
+            if(handPool.length === 0) handPool = shuffleHands();
+            currentHand = handPool.pop();
+            currentStack = stacks[Math.floor(Math.random() * stacks.length)];
+            const res = await fetch(`./${currentStack}.json`);
+            db = await res.json();
+            currentPos = Object.keys(db)[Math.floor(Math.random() * Object.keys(db).length)];
+            
+            document.getElementById('stackText').innerText = currentStack.toUpperCase();
+            document.querySelectorAll('.seat').forEach(s => s.classList.remove('active-seat'));
+            document.getElementById('s-'+currentPos).classList.add('active-seat');
+            
+            const btn = document.getElementById('s-BTN');
+            document.getElementById('dealerBtn').style.cssText = `top:${btn.offsetTop+10}px; left:${btn.offsetLeft+10}px;`;
+            
+            renderCards();
+            document.getElementById('feedback').innerText = "";
+        }
+
+        function renderCards() {
+            const v1 = currentHand[0], v2 = currentHand[1], type = currentHand[2] || "";
+            let s1 = suits[Math.floor(Math.random()*4)], s2 = (type === 's') ? s1 : suits.find(x => x.s !== s1.s);
+            document.getElementById('visualCards').innerHTML = `
+                <div class="card ${s1.c}"><div>${v1}</div><div class="suit-big">${s1.s}</div></div>
+                <div class="card ${s2.c}"><div>${v2}</div><div class="suit-big">${s2.s}</div></div>
+            `;
+        }
+
+        function toggleMatrix() {
+            const m = document.getElementById('matrixGrid'); m.innerHTML = '';
+            for(let i=0; i<13; i++){
+                for(let j=0; j<13; j++){
+                    let h = (i<j)?cardValues[i]+cardValues[j]+"s":(i>j)?cardValues[j]+cardValues[i]+"o":cardValues[i]+cardValues[j];
+                    let div = document.createElement('div');
+                    div.className = 'cell ' + ((db[currentPos].hands[h] || "fold") === "raise" ? 'raise' : '');
+                    if(h === currentHand) div.classList.add('highlight');
+                    div.innerText = h;
+                    m.appendChild(div);
+                }
+            }
+            document.getElementById('matrixOverlay').style.display = (document.getElementById('matrixOverlay').style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function checkAction(action) {
+            let correct = (db[currentPos].hands[currentHand] || "fold").toLowerCase();
+            document.getElementById('feedback').innerText = (action === correct) ? "✅ ACERTOU!" : "❌ ERROU: " + correct.toUpperCase();
+            setTimeout(nextRound, 1000);
+        }
+
+        nextRound();
     </script>
 </body>
 </html>
