@@ -5,51 +5,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GTO Trainer</title>
     <style>
-        body { margin: 0; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; }
-        .table { width: 340px; height: 180px; background: #064e3b; border-radius: 100px; margin: 20px; border: 8px solid #334155; position: relative; }
-        .card-container { display: flex; gap: 20px; margin: 20px; }
-        .card { width: 80px; height: 110px; background: white; color: black; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: bold; font-size: 1.5rem; }
-        .btn-group { display: flex; gap: 10px; width: 340px; }
-        .btn { flex: 1; padding: 20px; border: none; font-weight: bold; color: white; cursor: pointer; border-radius: 4px; }
+        body { margin: 0; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; font-family: sans-serif; padding: 10px; }
+        .stats { color: #94a3b8; font-size: 0.9rem; margin-bottom: 5px; }
+        .stack-box { background: #d97706; padding: 5px 15px; border-radius: 4px; font-weight: bold; margin-bottom: 10px; }
+        
+        .table { width: 340px; height: 180px; background: #064e3b; border-radius: 100px; margin: 10px; border: 8px solid #334155; position: relative; }
+        .seat { position: absolute; background: #1e293b; padding: 3px 6px; border-radius: 3px; font-size: 8px; border: 1px solid #475569; color: #94a3b8; }
+        .active-seat { border: 1px solid #f97316; color: white; background: #374151; font-weight: bold; }
+        
+        .hand-container { display: flex; gap: 15px; margin: 20px 0; }
+        .card { width: 70px; height: 100px; background: white; color: black; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.8rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        
+        .actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 340px; margin-top: 10px; }
+        .btn { padding: 15px; border: none; font-weight: bold; color: white; cursor: pointer; border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <div id="stackText" style="margin-top: 10px; font-weight: bold;">Stack: --</div>
-    <div class="table" id="table"></div>
-    <div class="card-container" id="visualCards"></div>
+    <div class="stats">Mãos: <span id="count">0</span>/100 | Acerto: <span id="perc">0</span>%</div>
+    <div class="stack-box" id="stackText">Stack: --</div>
     
-    <div class="btn-group">
+    <div class="table" id="table">
+        <div class="seat" style="top:5px; left:45%;" id="s-UTG">UTG</div>
+        <div class="seat" style="top:30px; right:20%;" id="s-UTG1">UTG1</div>
+        <div class="seat" style="top:80px; right:5%;" id="s-UTG2">UTG2</div>
+        <div class="seat" style="bottom:30px; right:20%;" id="s-MP">MP</div>
+        <div class="seat" style="bottom:5px; left:45%;" id="s-HJ">HJ</div>
+        <div class="seat" style="bottom:30px; left:20%;" id="s-CO">CO</div>
+        <div class="seat" style="top:80px; left:5%;" id="s-BTN">BTN</div>
+        <div class="seat" style="top:30px; left:20%;" id="s-SB">SB</div>
+        <div class="seat" style="top:5px; left:45%;" id="s-BB">BB</div>
+    </div>
+
+    <div class="hand-container" id="visualCards"></div>
+    
+    <div class="actions">
         <button class="btn" style="background: #f97316;" onclick="checkAction('raise')">RAISE</button>
         <button class="btn" style="background: #ef4444;" onclick="checkAction('fold')">FOLD</button>
         <button class="btn" style="background: #475569;" onclick="toggleMatrix()">MATRIZ</button>
     </div>
-    <p id="feedback" style="margin: 20px; font-weight: bold;"></p>
+    <p id="feedback" style="font-weight: bold; height: 20px; margin-top: 10px;"></p>
 
     <script>
-        // Lógica de Sorteio (Mantendo o que funcionava)
         const stacks = ["100bb", "60bb", "30bb", "20bb"];
-        let db = {}, currentHand = "", currentPos = "";
+        let db = {}, handsCount = 0, hits = 0, currentHand = "AQ", currentPos = "UTG";
 
         async function nextRound() {
             let stack = stacks[Math.floor(Math.random() * stacks.length)];
             const res = await fetch(`./${stack}.json?t=${Date.now()}`);
             db = await res.json();
             
-            // Simulação de cartas (A, Q)
-            currentHand = "AQ"; 
             document.getElementById('stackText').innerText = "Stack: " + stack.toUpperCase();
             renderCards();
         }
 
         function renderCards() {
             document.getElementById('visualCards').innerHTML = `
-                <div class="card">A</div>
-                <div class="card">Q</div>
+                <div class="card">${currentHand[0]}</div>
+                <div class="card">${currentHand[1]}</div>
             `;
         }
 
-        function checkAction(a) { document.getElementById('feedback').innerText = "Ação: " + a; setTimeout(nextRound, 800); }
+        function checkAction(a) {
+            handsCount++;
+            document.getElementById('feedback').innerText = "Ação: " + a;
+            document.getElementById('count').innerText = handsCount;
+            setTimeout(nextRound, 800);
+        }
         function toggleMatrix() { alert("Matriz"); }
 
         window.onload = nextRound;
