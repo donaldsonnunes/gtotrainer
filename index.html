@@ -6,64 +6,68 @@
     <style>
         body { font-family: sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .box { background: #1e293b; padding: 20px; border-radius: 8px; text-align: center; width: 300px; }
-        button { padding: 15px 30px; font-size: 16px; cursor: pointer; margin: 5px; border-radius: 5px; border: none; }
-        .btn-raise { background: #f97316; }
-        .btn-fold { background: #4b5563; }
-        #debug { font-size: 10px; color: yellow; margin-top: 10px; }
+        .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; width: 360px; margin-top: 20px; }
+        .cell { background-color: #334155; padding: 5px; text-align: center; font-size: 9px; border-radius: 2px; }
+        button { padding: 10px 20px; cursor: pointer; margin: 5px; }
     </style>
 </head>
 <body>
-    <h1>Quiz GTO</h1>
     <div class="box">
         <p>Stack: <span id="stack">--</span> | Pos: <span id="pos">--</span></p>
-        <p>Mão: <strong id="hand" style="font-size: 24px;">--</strong></p>
-        <button class="btn-raise" onclick="check('raise')">Raise</button>
-        <button class="btn-fold" onclick="check('fold')">Fold</button>
+        <p>Mão: <strong id="hand">--</strong></p>
+        <button onclick="check('raise')">Raise</button>
+        <button onclick="check('fold')">Fold</button>
         <p id="result"></p>
-        <p id="debug"></p>
     </div>
+    <div id="matrix" class="matrix"></div>
 
     <script>
-        const handsList = ["AA","KK","QQ","JJ","TT","99","88","AKs","AQs","AJs","ATs","AKo","AQo","AJo","KQs","KJs","QJs","JTs"]; 
-        const stacks = ["100bb", "60bb", "30bb", "20bb"];
-        const positions = ["UTG", "UTG1", "UTG2", "MP", "HJ", "CO", "BTN", "SB"];
-        
+        const cardValues = ['A','K','Q','J','T','9','8','7','6','5','4','3','2'];
         let db = {};
         let currentPos = "", currentHand = "", currentStack = "";
 
-        async function loadStack(stackName) {
+        async function init() {
             try {
-                const res = await fetch('./' + stackName + '.json');
+                const res = await fetch('./100bb.json');
                 db = await res.json();
-                document.getElementById('debug').innerText = "Carregado: " + stackName + ".json";
-                currentStack = stackName;
-                next(); // DISPARA O JOGO APÓS CARREGAR
-            } catch(e) { 
-                document.getElementById('debug').innerText = "Erro ao carregar " + stackName; 
+                renderMatrix();
+                next();
+            } catch(e) { console.error("Erro JSON"); }
+        }
+
+        function renderMatrix() {
+            const m = document.getElementById('matrix');
+            m.innerHTML = '';
+            for(let i=0; i<13; i++){
+                for(let j=0; j<13; j++){
+                    let hand = (i<j) ? cardValues[i]+cardValues[j]+"s" : (i>j) ? cardValues[j]+cardValues[i]+"o" : cardValues[i]+cardValues[j];
+                    let div = document.createElement('div');
+                    div.className = 'cell';
+                    div.innerText = hand;
+                    // Lógica de cores: busca direto no .hands do JSON
+                    let action = (db[currentPos] && db[currentPos].hands && db[currentPos].hands[hand]) ? db[currentPos].hands[hand] : "fold";
+                    div.style.background = (action.toLowerCase() === "raise") ? "#f97316" : "#334155";
+                    m.appendChild(div);
+                }
             }
         }
 
         function next() {
-            currentPos = positions[Math.floor(Math.random() * positions.length)];
-            currentHand = handsList[Math.floor(Math.random() * handsList.length)];
-            
-            document.getElementById('stack').innerText = currentStack.toUpperCase();
-            document.getElementById('pos').innerText = currentPos;
+            currentPos = "UTG"; // Ajuste conforme necessário
+            const hands = Object.keys(db[currentPos].hands);
+            currentHand = hands[Math.floor(Math.random() * hands.length)];
             document.getElementById('hand').innerText = currentHand;
-            document.getElementById('result').innerText = "";
+            document.getElementById('pos').innerText = currentPos;
+            document.getElementById('stack').innerText = "100BB";
         }
 
         function check(action) {
-            // Acesso seguro: db[pos].hands[hand]
-            let posData = (db[currentPos] && db[currentPos].hands) ? db[currentPos].hands : null;
-            let correct = (posData && posData[currentHand]) ? posData[currentHand].toLowerCase() : "fold";
-            
-            document.getElementById('result').innerText = (action === correct) ? "✅ Acertou!" : "❌ Errou. Era " + correct;
-            setTimeout(next, 1200);
+            let correct = db[currentPos].hands[currentHand].toLowerCase();
+            document.getElementById('result').innerText = (action === correct) ? "✅ Acertou!" : "❌ Errou: " + correct;
+            renderMatrix();
+            setTimeout(next, 1000);
         }
-
-        // Inicia com um stack aleatório
-        loadStack(stacks[Math.floor(Math.random() * stacks.length)]);
+        init();
     </script>
 </body>
 </html>
