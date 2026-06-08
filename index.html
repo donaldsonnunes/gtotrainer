@@ -3,29 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MTT GTO Quiz Trainer</title>
+    <title>Quiz GTO</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
-        .box { background: #1e293b; padding: 20px; border-radius: 12px; text-align: center; width: 100%; max-width: 400px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 2px; width: 100%; max-width: 400px; margin-top: 20px; }
-        .cell { background-color: #334155; padding: 5px 0; text-align: center; font-size: 9px; border-radius: 2px; color: #94a3b8; }
-        .raise { background-color: #f97316 !important; color: white; font-weight: bold; }
-        .fold { background-color: #1e293b !important; color: #475569; }
-        button { padding: 15px 25px; font-size: 16px; margin: 5px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        body { font-family: sans-serif; background: #0f172a; color: white; display: flex; flex-direction: column; align-items: center; padding: 10px; margin: 0; }
+        .box { background: #1e293b; padding: 20px; border-radius: 12px; text-align: center; width: 100%; max-width: 400px; }
+        .matrix { display: grid; grid-template-columns: repeat(13, 1fr); gap: 1px; width: 100%; max-width: 400px; margin-top: 20px; }
+        .cell { background-color: #334155; padding: 4px 1px; text-align: center; font-size: 8px; border-radius: 1px; color: #94a3b8; }
+        /* Raise é laranja, Fold é azul escuro */
+        .raise { background-color: #f97316 !important; color: white !important; font-weight: bold; }
+        .fold { background-color: #1e293b !important; color: #475569 !important; }
+        button { padding: 15px 30px; font-size: 16px; margin: 5px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
         .btn-raise { background: #f97316; color: white; }
-        .btn-fold { background: #475569; color: white; }
-        #debug { font-size: 9px; color: #fbbf24; margin-top: 15px; }
+        .btn-fold { background: #4b5563; color: white; }
     </style>
 </head>
 <body>
     <div class="box">
-        <p style="margin:0 0 10px 0; font-size: 0.9rem;">Stack: <span id="stack">--</span> | Pos: <span id="pos">--</span></p>
-        <p style="margin:0; font-size: 1.2rem;">Mão:</p>
-        <p id="hand" style="font-size: 2.5rem; margin: 10px 0; color: #4ade80; font-weight: bold;">--</p>
+        <p>Stack: <span id="stack">--</span> | Pos: <span id="pos">--</span></p>
+        <p>Mão: <strong id="hand" style="font-size: 2rem;">--</strong></p>
         <button class="btn-raise" onclick="check('raise')">Raise</button>
         <button class="btn-fold" onclick="check('fold')">Fold</button>
-        <p id="result" style="height: 20px; font-weight: bold; margin-top: 15px;"></p>
-        <p id="debug">Carregando...</p>
+        <p id="result"></p>
     </div>
     <div id="matrix" class="matrix"></div>
 
@@ -40,9 +38,8 @@
             try {
                 const res = await fetch('./' + currentStack + '.json');
                 db = await res.json();
-                document.getElementById('debug').innerText = "Stack: " + currentStack.toUpperCase();
                 next();
-            } catch(e) { document.getElementById('debug').innerText = "Erro ao carregar " + currentStack; }
+            } catch(e) { console.error("Erro ao carregar"); }
         }
 
         function next() {
@@ -54,7 +51,6 @@
             document.getElementById('stack').innerText = currentStack.toUpperCase();
             document.getElementById('pos').innerText = currentPos;
             document.getElementById('hand').innerText = currentHand;
-            document.getElementById('result').innerText = "";
             renderMatrix();
         }
 
@@ -68,9 +64,9 @@
                     div.className = 'cell';
                     div.innerText = hand;
                     
+                    // LÓGICA CORRIGIDA: fold por padrão, só pinta de raise se estiver no JSON
                     let action = (db[currentPos].hands[hand] || "fold").toLowerCase();
-                    if(action === "raise") div.classList.add('raise');
-                    else div.classList.add('fold');
+                    div.classList.add(action === "raise" ? 'raise' : 'fold');
                     
                     m.appendChild(div);
                 }
@@ -80,7 +76,7 @@
         function check(action) {
             let correct = (db[currentPos].hands[currentHand] || "fold").toLowerCase();
             document.getElementById('result').innerText = (action === correct) ? "✅ Acertou!" : "❌ Errou: " + correct.toUpperCase();
-            setTimeout(loadStack, 1000);
+            setTimeout(loadStack, 1200);
         }
 
         loadStack();
